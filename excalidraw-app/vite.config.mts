@@ -11,6 +11,9 @@ import { woff2BrowserPlugin } from "../scripts/woff2/woff2-vite-plugins";
 const envVars = loadEnv("", `../`);
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    global: 'window',
+  },
   server: {
     port: Number(envVars.VITE_APP_PORT || 3000),
     // open the browser
