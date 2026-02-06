@@ -3,6 +3,8 @@ import { StoreAction } from "../store";
 import { t } from "../i18n";
 import { KEYS } from "../keys";
 import { isValidExcalidrawData } from "../data/json";
+import { getCommonBounds } from "../element/bounds";
+import { getNonDeletedElements } from "../element";
 
 export const actionImportExcalidraw = register({
   name: "importExcalidraw",
@@ -61,16 +63,79 @@ export const actionImportExcalidraw = register({
           return;
         }
 
+        // Calculate smart position to avoid overlapping with existing elements
+        const existingElements = getNonDeletedElements(
+          app.scene.getElementsIncludingDeleted(),
+        );
+
+        // Get viewport center in scene coordinates
+        const viewportCenterX = appState.scrollX + appState.width / 2;
+        const viewportCenterY = appState.scrollY + appState.height / 2;
+
+        let targetPosition: { clientX: number; clientY: number };
+
+        if (existingElements.length === 0) {
+          // No existing elements, use viewport center
+          targetPosition = { clientX: viewportCenterX, clientY: viewportCenterY };
+        } else {
+          // Get bounds of existing elements
+          const existingBounds = getCommonBounds(existingElements);
+          const existingCenterX = (existingBounds[0] + existingBounds[2]) / 2;
+          const existingCenterY = (existingBounds[1] + existingBounds[3]) / 2;
+
+          // Get bounds of imported elements to calculate their size
+          const importedBounds = getCommonBounds(importedElements);
+          const importedWidth = importedBounds[2] - importedBounds[0];
+          const importedHeight = importedBounds[3] - importedBounds[1];
+
+          // Determine position relative to viewport and existing content
+          const viewportRelativeX = viewportCenterX - existingCenterX;
+          const viewportRelativeY = viewportCenterY - existingCenterY;
+
+          // Padding between existing content and imported content
+          const PADDING = 50;
+
+          // Decide placement based on viewport position
+          let targetX: number;
+          let targetY: number;
+
+          // Determine horizontal placement
+          if (viewportRelativeX < -existingBounds[2] / 4) {
+            // Viewport is to the left, place imported content to the left
+            targetX = existingBounds[0] - importedWidth - PADDING;
+          } else if (viewportRelativeX > existingBounds[2] / 4) {
+            // Viewport is to the right, place imported content to the right
+            targetX = existingBounds[2] + PADDING;
+          } else {
+            // Viewport is centered horizontally, use viewport center
+            targetX = viewportCenterX - importedWidth / 2;
+          }
+
+          // Determine vertical placement
+          if (viewportRelativeY < -existingBounds[3] / 4) {
+            // Viewport is above, place imported content above
+            targetY = existingBounds[1] - importedHeight - PADDING;
+          } else if (viewportRelativeY > existingBounds[3] / 4) {
+            // Viewport is below, place imported content below
+            targetY = existingBounds[3] + PADDING;
+          } else {
+            // Viewport is centered vertically, use viewport center
+            targetY = viewportCenterY - importedHeight / 2;
+          }
+
+          targetPosition = { clientX: targetX, clientY: targetY };
+        }
+
         // Use addElementsFromPasteOrLibrary to handle:
         // - ID regeneration
-        // - Positioning at center
+        // - Positioning at calculated position
         // - Binary files merging
         // - Grouping
         // - Selection
         app.addElementsFromPasteOrLibrary({
           elements: importedElements,
           files: data.files || null,
-          position: "center",
+          position: targetPosition,
           retainSeed: false,
         });
 
