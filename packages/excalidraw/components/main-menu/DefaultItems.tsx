@@ -26,6 +26,7 @@ import DropdownMenuItemLink from "../dropdownMenu/DropdownMenuItemLink";
 import {
   actionClearCanvas,
   actionLoadScene,
+  actionImportSVG,
   actionSaveToActiveFile,
   actionShortcuts,
   actionToggleSearchMenu,
@@ -86,6 +87,28 @@ export const LoadScene = () => {
   );
 };
 LoadScene.displayName = "LoadScene";
+
+export const ImportSVG = () => {
+  const { t } = useI18n();
+  const actionManager = useExcalidrawActionManager();
+
+  if (!actionManager.isActionEnabled(actionImportSVG)) {
+    return null;
+  }
+
+  return (
+    <DropdownMenuItem
+      icon={LoadIcon}
+      onSelect={() => actionManager.executeAction(actionImportSVG)}
+      data-testid="import-svg-button"
+      shortcut={getShortcutFromShortcutName("importSVG")}
+      aria-label={t("labels.importSVG")}
+    >
+      {t("labels.importSVG")}
+    </DropdownMenuItem>
+  );
+};
+ImportSVG.displayName = "ImportSVG";
 
 export const SaveToActiveFile = () => {
   const { t } = useI18n();

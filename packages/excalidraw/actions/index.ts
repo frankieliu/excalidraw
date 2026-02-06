@@ -40,6 +40,8 @@ export {
   actionLoadScene,
 } from "./actionExport";
 
+export { actionImportSVG } from "./actionImportSVG";
+
 export { actionCopyStyles, actionPasteStyles } from "./actionStyles";
 export {
   actionToggleCanvasMenu,
