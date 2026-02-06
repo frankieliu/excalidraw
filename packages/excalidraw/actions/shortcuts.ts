@@ -55,6 +55,7 @@ export type ShortcutName =
   | "saveScene"
   | "imageExport"
   | "importSVG"
+  | "importExcalidraw"
   | "commandPalette"
   | "searchMenu";
 
@@ -63,6 +64,7 @@ const shortcutMap: Record<ShortcutName, string[]> = {
   saveScene: [getShortcutKey("CtrlOrCmd+S")],
   loadScene: [getShortcutKey("CtrlOrCmd+O")],
   importSVG: [getShortcutKey("CtrlOrCmd+Shift+I")],
+  importExcalidraw: [getShortcutKey("CtrlOrCmd+Shift+X")],
   clearCanvas: [getShortcutKey("CtrlOrCmd+Delete")],
   imageExport: [getShortcutKey("CtrlOrCmd+Shift+E")],
   commandPalette: [

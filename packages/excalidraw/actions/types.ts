@@ -143,7 +143,8 @@ export type ActionName =
   | "toggleLassoTool"
   | "toggleShapeSwitch"
   | "togglePolygon"
-  | "importSVG";
+  | "importSVG"
+  | "importExcalidraw";
 
 export type PanelComponentProps = {
   elements: readonly ExcalidrawElement[];
