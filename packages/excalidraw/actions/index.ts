@@ -41,6 +41,7 @@ export {
 } from "./actionExport";
 
 export { actionImportSVG } from "./actionImportSVG";
+export { actionImportExcalidraw } from "./actionImportExcalidraw";
 
 export { actionCopyStyles, actionPasteStyles } from "./actionStyles";
 export {

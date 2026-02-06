@@ -153,7 +153,8 @@ export type ActionName =
   | "autoResize"
   | "elementStats"
   | "searchMenu"
-  | "importSVG";
+  | "importSVG"
+  | "importExcalidraw";
 
 export type PanelComponentProps = {
   elements: readonly ExcalidrawElement[];

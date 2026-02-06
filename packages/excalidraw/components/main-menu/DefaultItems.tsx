@@ -27,6 +27,7 @@ import {
   actionClearCanvas,
   actionLoadScene,
   actionImportSVG,
+  actionImportExcalidraw,
   actionSaveToActiveFile,
   actionShortcuts,
   actionToggleSearchMenu,
@@ -109,6 +110,28 @@ export const ImportSVG = () => {
   );
 };
 ImportSVG.displayName = "ImportSVG";
+
+export const ImportExcalidraw = () => {
+  const { t } = useI18n();
+  const actionManager = useExcalidrawActionManager();
+
+  if (!actionManager.isActionEnabled(actionImportExcalidraw)) {
+    return null;
+  }
+
+  return (
+    <DropdownMenuItem
+      icon={LoadIcon}
+      onSelect={() => actionManager.executeAction(actionImportExcalidraw)}
+      data-testid="import-excalidraw-button"
+      shortcut={getShortcutFromShortcutName("importExcalidraw")}
+      aria-label={t("labels.importExcalidraw")}
+    >
+      {t("labels.importExcalidraw")}
+    </DropdownMenuItem>
+  );
+};
+ImportExcalidraw.displayName = "ImportExcalidraw";
 
 export const SaveToActiveFile = () => {
   const { t } = useI18n();

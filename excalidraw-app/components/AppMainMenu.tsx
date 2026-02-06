@@ -22,6 +22,7 @@ export const AppMainMenu: React.FC<{
     <MainMenu>
       <MainMenu.DefaultItems.LoadScene />
       <MainMenu.DefaultItems.ImportSVG />
+      <MainMenu.DefaultItems.ImportExcalidraw />
       <MainMenu.DefaultItems.SaveToActiveFile />
       <MainMenu.DefaultItems.Export />
       <MainMenu.DefaultItems.SaveAsImage />
