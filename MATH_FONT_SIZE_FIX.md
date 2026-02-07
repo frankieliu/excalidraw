@@ -200,12 +200,14 @@ img.onload = function () {
 4. Press Esc or click outside
 5. Math should re-render with updated dimensions
 
-## Debug Logs Added (TO REMOVE)
+## Debug Logs Removed
 
-Before final cleanup, remove console.log statements from:
+Debug console.log statements have been removed from:
 - `actionProperties.tsx`: changeFontSize, customMeasureFn, customWrapFn, offsetElementAfterFontResize
-- `textElement.ts`: redrawTextBoundingBox (multiple debug lines)
+- `textElement.ts`: redrawTextBoundingBox
 - `implementation.tsx`: renderMathElement, measureMathElement, doRenderChild
+
+Cleanup completed in commit: chore: Remove debug console.log statements
 
 ## Backward Compatibility
 
@@ -224,7 +226,6 @@ This work builds on previous session:
 
 ## Future Improvements
 
-1. Remove debug logging before production
-2. Consider applying this async callback pattern to other async operations
-3. Could extend editing/rendering separation to other complex subtypes
-4. May want to cache math images more aggressively to reduce re-generation
+1. Consider applying this async callback pattern to other async operations
+2. Could extend editing/rendering separation to other complex subtypes
+3. May want to cache math images more aggressively to reduce re-generation
