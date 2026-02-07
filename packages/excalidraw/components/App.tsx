@@ -264,6 +264,7 @@ import {
   type SubtypePrepFn,
   type SubtypeMethods,
   selectSubtype,
+  getSubtypeMethods,
 } from "../subtypes";
 
 import type { GlobalPoint, LocalPoint, Radians } from "@excalidraw/math";
@@ -2138,6 +2139,8 @@ class App extends React.Component<AppProps, AppState> {
                             pendingFlowchartNodes:
                               this.flowChartCreator.pendingNodes,
                             theme: this.state.theme,
+                            getSubtypeMethods,
+                            onAsyncRender: () => this.scene.triggerUpdate(),
                           }}
                         />
                         {this.state.newElement && (
@@ -2159,6 +2162,8 @@ class App extends React.Component<AppProps, AppState> {
                                 this.elementsPendingErasure,
                               pendingFlowchartNodes: null,
                               theme: this.state.theme,
+                              getSubtypeMethods,
+                              onAsyncRender: () => this.scene.triggerUpdate(),
                             }}
                           />
                         )}
@@ -5421,6 +5426,24 @@ class App extends React.Component<AppProps, AppState> {
   ) {
     const elementsMap = this.scene.getElementsMapIncludingDeleted();
 
+    // Helper to refresh text dimensions with subtype support
+    const refreshTextDimensionsWithSubtype = (
+      _element: ExcalidrawTextElement,
+      container: ExcalidrawTextContainer | null,
+      elementsMap: ElementsMap,
+      nextOriginalText: string,
+    ) => {
+      // During editing (inside wysiwyg), always use normal text measurements
+      // for better editing experience (visible cursor, readable text).
+      // Subtype rendering will be applied after editing completes.
+      return refreshTextDimensions(
+        _element,
+        container,
+        elementsMap,
+        nextOriginalText,
+      );
+    };
+
     const updateElement = (nextOriginalText: string, isDeleted: boolean) => {
       this.scene.replaceAllElements([
         // Not sure why we include deleted elements as well hence using deleted elements map
@@ -5430,7 +5453,7 @@ class App extends React.Component<AppProps, AppState> {
               originalText: nextOriginalText,
               isDeleted: isDeleted ?? _element.isDeleted,
               // returns (wrapped) text and new dimensions
-              ...refreshTextDimensions(
+              ...refreshTextDimensionsWithSubtype(
                 _element,
                 getContainerElement(_element, elementsMap),
                 elementsMap,
@@ -5441,6 +5464,9 @@ class App extends React.Component<AppProps, AppState> {
           return _element;
         }),
       ]);
+
+      // Trigger a scene update to ensure math elements re-render
+      this.scene.triggerUpdate();
     };
 
     textWysiwyg({
@@ -5468,6 +5494,52 @@ class App extends React.Component<AppProps, AppState> {
       onSubmit: withBatchedUpdates(({ viaKeyboard, nextOriginalText }) => {
         const isDeleted = !nextOriginalText.trim();
         updateElement(nextOriginalText, isDeleted);
+
+        // After editing completes, apply subtype measurements if needed
+        if (!isDeleted && element.subtype) {
+          const methods = getSubtypeMethods(element.subtype);
+          if (methods?.measureText && methods?.wrapText) {
+            const updatedElement = this.scene.getElement(element.id);
+            if (updatedElement && isTextElement(updatedElement)) {
+              const container = this.scene.getContainerElement(updatedElement);
+
+              // Use subtype methods to get correct dimensions
+              const containerWidth = container
+                ? getBoundTextMaxWidth(container, updatedElement)
+                : updatedElement.width;
+
+              let text = nextOriginalText;
+              if (container || !updatedElement.autoResize) {
+                text = methods.wrapText(updatedElement, containerWidth, {
+                  fontSize: updatedElement.fontSize,
+                  text: nextOriginalText,
+                });
+              }
+
+              const dimensions = methods.measureText(updatedElement, {
+                fontSize: updatedElement.fontSize,
+                text,
+              });
+
+              // Update element with correct math dimensions
+              this.scene.replaceAllElements(
+                this.scene.getElementsIncludingDeleted().map((el) => {
+                  if (el.id === element.id && isTextElement(el)) {
+                    return newElementWith(el, {
+                      text,
+                      width: dimensions.width,
+                      height: dimensions.height,
+                    });
+                  }
+                  return el;
+                }),
+              );
+            }
+          }
+        }
+
+        // Trigger scene update to ensure math elements re-render
+        this.scene.triggerUpdate();
 
         // select the created text element only if submitting via keyboard
         // (when submitting via click it should act as signal to deselect)
@@ -5860,6 +5932,10 @@ class App extends React.Component<AppProps, AppState> {
       y: sceneY,
     });
 
+    // Get subtype and customData from appState if a subtype is active
+    const { subtype, customData } = selectSubtype(this.state, "text");
+    console.log("[DEBUG] startTextEditing - subtype:", subtype, "customData:", customData, "activeSubtypes:", this.state.activeSubtypes);
+
     const element =
       existingTextElement ||
       newTextElement({
@@ -5890,7 +5966,11 @@ class App extends React.Component<AppProps, AppState> {
             : container.angle
           : (0 as Radians),
         frameId: topLayerFrame ? topLayerFrame.id : null,
+        subtype,
+        customData,
       });
+
+    console.log("[DEBUG] Created text element - id:", element.id, "subtype:", element.subtype, "customData:", element.customData);
 
     if (!existingTextElement && shouldBindToContainer && container) {
       this.scene.mutateElement(container, {

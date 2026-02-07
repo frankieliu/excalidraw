@@ -1,3 +1,4 @@
+import React from "react";
 import { updateActiveTool } from "@excalidraw/common";
 import { getShortcutKey } from "../shortcut";
 import { t } from "../i18n";
@@ -12,7 +13,7 @@ import {
   isValidSubtype,
   subtypeCollides,
 } from "../subtypes";
-import type { ExcalidrawElement, Theme } from "../element/types";
+import type { ExcalidrawElement, Theme } from "@excalidraw/element/types";
 import {
   useExcalidrawActionManager,
   useExcalidrawContainer,
@@ -24,7 +25,7 @@ import { Island } from "./Island";
 export const SubtypeButton = (
   subtype: Subtype,
   parentType: SubtypeRecord["parents"][number],
-  icon: ({ theme }: { theme: Theme }) => JSX.Element,
+  icon: ({ theme }: { theme: Theme }) => React.ReactElement,
   key?: string,
 ) => {
   const title = key !== undefined ? ` - ${getShortcutKey(key)}` : "";
@@ -32,11 +33,13 @@ export const SubtypeButton = (
     key !== undefined ? (event) => event.code === `Key${key}` : undefined;
   const subtypeAction: Action = {
     name: makeCustomActionName(subtype),
-    label: t(`toolBar.${subtype}`),
+    label: t(`toolBar.${subtype}` as any),
     trackEvent: false,
-    predicate: (...rest) => rest[4]?.subtype === subtype,
+    predicate: (elements, appState, appProps, app) => {
+      return appState.activeSubtypes?.includes(subtype) ?? false;
+    },
     perform: (elements, appState) => {
-      const inactive = !appState.activeSubtypes?.includes(subtype) ?? true;
+      const inactive = !appState.activeSubtypes?.includes(subtype);
       const activeSubtypes: Subtype[] = [];
       if (appState.activeSubtypes) {
         activeSubtypes.push(...appState.activeSubtypes);
@@ -72,7 +75,7 @@ export const SubtypeButton = (
           selectedGroupIds,
           activeTool,
         },
-        storeAction: "capture",
+        captureUpdate: "IMMEDIATELY",
       };
     },
     keyTest,
@@ -85,8 +88,8 @@ export const SubtypeButton = (
             appState.activeSubtypes.includes(subtype),
           "ToolIcon--plain": true,
         })}
-        title={`${t(`toolBar.${subtype}`)}${title}`}
-        aria-label={t(`toolBar.${subtype}`)}
+        title={`${t(`toolBar.${subtype}` as any)}${title}`}
+        aria-label={t(`toolBar.${subtype}` as any)}
         onClick={() => {
           updateData(null);
         }}
@@ -136,10 +139,17 @@ export const SubtypeToggles = () => {
     const top = event.clientY - offsetTop;
 
     const items: ContextMenuItems = [];
-    am.filterActions(isSubtypeAction).forEach(
-      (action) =>
-        am.isActionEnabled(action, { data: { subtype } }) && items.push(action),
-    );
+    // Filter actions manually since filterActions doesn't exist
+    const elements = am.getElementsIncludingDeleted();
+    const appState = am.getAppState();
+    Object.values(am.actions).forEach((action) => {
+      if (
+        isSubtypeAction(action, elements, appState, am.app) &&
+        am.isActionEnabled(action)
+      ) {
+        items.push(action);
+      }
+    });
     setAppState({}, () => {
       setAppState({
         contextMenu: { top, left, items },
@@ -162,7 +172,7 @@ export const SubtypeToggles = () => {
       >
         {getSubtypeNames().map((subtype) =>
           am.renderAction(
-            makeCustomActionName(subtype),
+            makeCustomActionName(subtype) as any,
             hasAlwaysEnabledActions(subtype) ? { onContextMenu } : {},
           ),
         )}
@@ -177,11 +187,15 @@ export const SubtypeShapeActions = (props: {
   elements: readonly ExcalidrawElement[];
 }) => {
   const am = useExcalidrawActionManager();
+  // Filter actions manually since filterActions doesn't exist
+  const elements = am.getElementsIncludingDeleted();
+  const appState = am.getAppState();
+  const subtypeActions = Object.values(am.actions).filter((action) =>
+    isSubtypeAction(action, elements, appState, am.app)
+  );
   return (
     <>
-      {am
-        .filterActions(isSubtypeAction, { elements: props.elements })
-        .map((action) => am.renderAction(action.name))}
+      {subtypeActions.map((action) => am.renderAction(action.name as any))}
     </>
   );
 };

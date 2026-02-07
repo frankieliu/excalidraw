@@ -37,6 +37,10 @@ export type StaticCanvasRenderConfig = {
   elementsPendingErasure: ElementsPendingErasure;
   pendingFlowchartNodes: PendingExcalidrawElements | null;
   theme: AppState["theme"];
+  /** Function to get subtype-specific render methods */
+  getSubtypeMethods?: (subtype: string) => any;
+  /** Callback to trigger re-render after async operations complete */
+  onAsyncRender?: () => void;
 };
 
 export type SVGRenderConfig = {

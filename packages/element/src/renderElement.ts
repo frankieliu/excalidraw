@@ -545,6 +545,16 @@ const drawElementOnCanvas = (
     }
     default: {
       if (isTextElement(element)) {
+        // Check if element has a subtype and use its render method
+        if (element.subtype && renderConfig.getSubtypeMethods) {
+          const methods = renderConfig.getSubtypeMethods(element.subtype);
+          if (methods?.render) {
+            methods.render(element, renderConfig.elementsMap, context, renderConfig);
+            break;
+          }
+        }
+
+        // Default text rendering
         const rtl = isRTL(element.text);
         const shouldTemporarilyAttach = rtl && !context.canvas.isConnected;
         if (shouldTemporarilyAttach) {

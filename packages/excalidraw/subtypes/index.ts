@@ -38,7 +38,7 @@ let parentTypeMap: readonly {
 }[] = [];
 let subtypeActionMap: readonly {
   subtype: Subtype;
-  actions: readonly ActionName[];
+  actions: readonly (ActionName | CustomActionName)[];
 }[] = [];
 let disabledActionMap: readonly {
   subtype: Subtype;
@@ -101,7 +101,7 @@ const isDisabledActionName = (s: any): s is DisabledActionName =>
 // by `subtype` (if `isAdded` is false)?
 const isForSubtype = (
   subtype: ExcalidrawElement["subtype"],
-  actionName: ActionName,
+  actionName: ActionName | CustomActionName,
   isAdded: boolean,
 ) => {
   const actions = isAdded ? subtypeActionMap : disabledActionMap;
@@ -112,7 +112,12 @@ const isForSubtype = (
   return false;
 };
 
-export const isSubtypeAction: ActionPredicateFn = function (action) {
+export const isSubtypeAction: ActionPredicateFn = function (
+  action,
+  elements,
+  appState,
+  app,
+) {
   return isSubtypeActionName(action.name) && !isSubtypeName(action.name);
 };
 
@@ -502,24 +507,13 @@ export const checkRefreshOnSubtypeLoad = (
     // element for a re-render, and indicate the scene needs a refresh.
     if (hasSubtype(element)) {
       ShapeCache.delete(element);
-      if (isTextElement(element)) {
-        redrawTextBoundingBox(
-          element,
-          getContainerElement(element, elementsMap),
-          elementsMap,
-          false,
-        );
-      }
+      // Note: redrawTextBoundingBox requires a Scene object which we don't have
+      // in this context. Text element dimensions will be updated when the scene
+      // re-renders after we return refreshNeeded = true.
       refreshNeeded = true;
-      const scene = Scene.getScene(element);
-      if (scene && !scenes.includes(scene)) {
-        // Store in case we have multiple scenes
-        scenes.push(scene);
-      }
     }
   });
-  // Only inform each scene once
-  scenes.forEach((scene) => scene.triggerUpdate());
+  // Scene update handled by caller
   return refreshNeeded;
 };
 

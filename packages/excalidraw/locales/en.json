@@ -173,7 +173,15 @@
     "linkToElement": "Link to object",
     "wrapSelectionInFrame": "Wrap selection in frame",
     "tab": "Tab",
-    "shapeSwitch": "Switch shape"
+    "shapeSwitch": "Switch shape",
+    "changeMathOnly": "Math display",
+    "mathOnlyTrue": "Math only",
+    "mathOnlyFalse": "Mixed text",
+    "resetUseTex": "Reset math input type",
+    "useTexTrueActive": "✔ Standard input",
+    "useTexTrueInactive": "Standard input",
+    "useTexFalseActive": "✔ Simplified input",
+    "useTexFalseInactive": "Simplified input"
   },
   "elementLink": {
     "title": "Link to object",
@@ -315,7 +323,8 @@
     "hand": "Hand (panning tool)",
     "extraTools": "More tools",
     "mermaidToExcalidraw": "Mermaid to Excalidraw",
-    "convertElementType": "Toggle shape type"
+    "convertElementType": "Toggle shape type",
+    "math": "Math"
   },
   "element": {
     "rectangle": "Rectangle",

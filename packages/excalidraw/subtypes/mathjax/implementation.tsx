@@ -2,6 +2,7 @@
 import fallbackMathJaxLangData from "./locales/en.json";
 import { FONT_FAMILY, SVG_NS } from "@excalidraw/common/constants";
 import { getFontString, getFontFamilyString, isRTL } from "@excalidraw/common/utils";
+import { getLineHeight } from "@excalidraw/common";
 import {
   getBoundTextElement,
   getBoundTextMaxWidth,
@@ -188,11 +189,11 @@ const loadMathJax = async () => {
 
     // Configure AsciiMath to use the "display" option.  See
     // https://github.com/mathjax/MathJax/issues/2520#issuecomment-1128831182.
-    const MathJax = (
-      await import(
-        /* @vite-ignore */ "mathjax-full/js/input/asciimath/mathjax2/legacy/MathJax"
-      )
-    ).MathJax;
+    // @ts-ignore - MathJax internal module doesn't have type declarations
+    const mathJaxModule = await import(
+      /* @vite-ignore */ "mathjax-full/js/input/asciimath/mathjax2/legacy/MathJax"
+    );
+    const MathJax = mathJaxModule.MathJax;
     mathJax.amFixes = MathJax.InputJax.AsciiMath.AM.Augment;
 
     type E = typeof LiteElement;
@@ -905,7 +906,7 @@ const cleanMathElementUpdate = function (updates) {
     }
   }
   (updates as any).fontFamily = FONT_FAMILY_MATH;
-  (updates as any).lineHeight = getLineHeightInPx(FONT_FAMILY_MATH, 20); // Use default font size
+  (updates as any).lineHeight = getLineHeight(FONT_FAMILY_MATH);
   return oldUpdates;
 } as SubtypeMethods["clean"];
 
@@ -917,6 +918,7 @@ const getMathEditorStyle = function (element) {
 } as SubtypeMethods["getEditorStyle"];
 
 const measureMathElement = function (element, next) {
+  console.log("[DEBUG measureMathElement] element.fontSize:", element.fontSize, "next:", next);
   ensureMathElement(element);
   const isMathJaxLoaded = mathJaxLoaded;
   if (!isMathJaxLoaded && isMathElement(element as ExcalidrawElement)) {
@@ -924,6 +926,7 @@ const measureMathElement = function (element, next) {
     return { width, height };
   }
   const fontSize = next?.fontSize ?? element.fontSize;
+  console.log("[DEBUG measureMathElement] Using fontSize:", fontSize);
   const lineHeight = element.lineHeight;
   const text = next?.text ?? element.text;
   const customData = next?.customData ?? element.customData;
@@ -938,17 +941,23 @@ const measureMathElement = function (element, next) {
   return metrics;
 } as SubtypeMethods["measureText"];
 
-const renderMathElement = function (element, elementMap, context) {
+const renderMathElement = function (element, elementMap, context, renderConfig) {
+  console.log("[DEBUG] renderMathElement called for element:", element.id, "subtype:", element.subtype, "text:", element.text);
   ensureMathElement(element);
   const isMathJaxLoaded = mathJaxLoaded;
-  const _element = element as NonDeleted<ExcalidrawMathElement>;
+  console.log("[DEBUG] MathJax loaded:", isMathJaxLoaded);
+
+  try {
+    const _element = element as NonDeleted<ExcalidrawMathElement>;
   const text = _element.text;
   const fontSize = _element.fontSize;
   const lineHeight = _element.lineHeight;
+  console.log("[DEBUG renderMathElement] Using fontSize:", fontSize, "lineHeight:", lineHeight, "full element:", _element);
   const strokeColor = _element.strokeColor;
   const textAlign = _element.textAlign;
   const opacity = _element.opacity / 100;
   const mathProps = getMathProps.ensureMathProps(_element.customData);
+  const onAsyncRender = renderConfig?.onAsyncRender;
 
   let _childIsSvg: boolean;
   let _text: string;
@@ -990,19 +999,24 @@ const renderMathElement = function (element, elementMap, context) {
         1,
         mathProps,
       );
+      console.log("[DEBUG doRenderChild] Cache key:", key, "fontSize:", fontSize);
 
       const _x = Math.round(x);
       const _y = Math.round(y);
       const imgKey = `${key}, ${width}, ${height}`;
+      console.log("[DEBUG doRenderChild] Full imgKey:", imgKey);
+      console.log("[DEBUG doRenderChild] Cache hit:", !!(isMathJaxLoaded && imageCache[imgKey] && imageCache[imgKey] !== undefined));
       if (
         isMathJaxLoaded &&
         imageCache[imgKey] &&
         imageCache[imgKey] !== undefined
       ) {
         const img = imageCache[imgKey];
+        console.log("[DEBUG doRenderChild] Using cached image");
         const [width, height] = [img.naturalWidth, img.naturalHeight];
         context.drawImage(img, _x, _y, width, height);
       } else {
+        console.log("[DEBUG doRenderChild] Generating new image");
         const img = new Image();
         _svg.setAttribute("width", `${width}`);
         _svg.setAttribute("height", `${height}`);
@@ -1026,7 +1040,11 @@ const renderMathElement = function (element, elementMap, context) {
               if (isMathJaxLoaded) {
                 imageCache[imgKey] = img;
               }
-              Scene.getScene(element)?.triggerUpdate();
+              // Trigger re-render after async image load
+              console.log("[DEBUG doRenderChild] Image loaded, calling onAsyncRender");
+              if (onAsyncRender) {
+                onAsyncRender();
+              }
             };
             img.src = reader.result as string;
           },
@@ -1068,6 +1086,11 @@ const renderMathElement = function (element, elementMap, context) {
     parentWidth,
   );
   context.restore();
+  console.log("[DEBUG] renderMathElement completed successfully for element:", element.id);
+  } catch (error) {
+    console.error("[DEBUG] Error in renderMathElement:", error);
+    throw error;
+  }
 } as SubtypeMethods["render"];
 
 const renderSvgMathElement = function (
@@ -1422,14 +1445,13 @@ const createMathActions = () => {
       return {
         elements,
         appState: { ...appState, customData },
-        storeAction: "capture",
+        captureUpdate: "IMMEDIATELY",
       };
     },
     label: (elements, appState) =>
       getMathProps.getUseTex(appState)
         ? "labels.useTexTrueActive"
         : "labels.useTexTrueInactive",
-    predicate: (...rest) => rest.length < 5 || rest[4]?.subtype === mathSubtype,
     trackEvent: false,
   };
   const actionUseTexFalse: Action = {
@@ -1441,14 +1463,13 @@ const createMathActions = () => {
       return {
         elements,
         appState: { ...appState, customData },
-        storeAction: "capture",
+        captureUpdate: "IMMEDIATELY",
       };
     },
     label: (elements, appState) =>
       !getMathProps.getUseTex(appState)
         ? "labels.useTexFalseActive"
         : "labels.useTexFalseInactive",
-    predicate: (...rest) => rest.length < 5 || rest[4]?.subtype === mathSubtype,
     trackEvent: false,
   };
   const actionResetUseTex: Action = {
@@ -1479,7 +1500,7 @@ const createMathActions = () => {
                 oldElement,
                 app.scene.getElementsMapIncludingDeleted(),
               ),
-              app.scene.getElementsMapIncludingDeleted(),
+              app.scene,
             );
             return newElement;
           }
@@ -1491,7 +1512,7 @@ const createMathActions = () => {
 
       return {
         elements: modElements,
-        storeAction: "capture",
+        captureUpdate: "IMMEDIATELY",
       };
     },
     keyTest: (event) => event.shiftKey && event.code === "KeyR",
@@ -1513,12 +1534,12 @@ const createMathActions = () => {
   };
   const actionChangeMathOnly: Action = {
     name: makeCustomActionName("changeMathOnly"),
-    label: t("labels.changeMathOnly"),
+    label: "labels.changeMathOnly",
     perform: (elements, appState, mathOnly: boolean | null, app) => {
       if (mathOnly === null) {
         mathOnly = getFormValue(
           elements,
-          appState,
+          app,
           (element) => {
             const el = hasBoundTextElement(element)
               ? getBoundTextElement(
@@ -1554,7 +1575,7 @@ const createMathActions = () => {
                 oldElement,
                 app.scene.getElementsMapIncludingDeleted(),
               ),
-              app.scene.getElementsMapIncludingDeleted(),
+              app.scene,
             );
             return newElement;
           }
@@ -1570,7 +1591,7 @@ const createMathActions = () => {
       return {
         elements: modElements,
         appState: { ...appState, customData },
-        storeAction: "capture",
+        captureUpdate: "IMMEDIATELY",
       };
     },
     PanelComponent: ({ elements, appState, updateData, app }) => {
@@ -1588,7 +1609,7 @@ const createMathActions = () => {
       };
       const value = getFormValue(
         elements,
-        appState,
+        app,
         (element) => {
           const el = hasBoundTextElement(element)
             ? getBoundTextElement(
@@ -1605,7 +1626,7 @@ const createMathActions = () => {
       );
       return (
         <fieldset>
-          <legend>{t("labels.changeMathOnly")}</legend>
+          <legend>{t("labels.changeMathOnly" as any)}</legend>
           {/* TODO: ButtonIconSelect component doesn't exist in current branch
           <ButtonIconSelect
             group="mathOnly"
@@ -1629,9 +1650,8 @@ const createMathActions = () => {
         </fieldset>
       );
     },
-    predicate: (...rest) =>
-      rest[4] === undefined &&
-      enableActionChangeMathProps(rest[0], rest[1], rest[3]),
+    predicate: (elements, appState, _, app) =>
+      enableActionChangeMathProps(elements, appState, app),
     trackEvent: false,
   };
   const actionMath = SubtypeButton(mathSubtype, "text", mathSubtypeIcon, "M");
@@ -1670,6 +1690,7 @@ export const prepareMathSubtype = function (
   const actions = createMathActions();
   actions.forEach((action) => addSubtypeAction(action));
   // Call loadMathJax() here if we want to be sure it's loaded.
+  loadMathJax(); // Start loading MathJax immediately
 
   return { actions, methods };
 } as SubtypePrepFn;

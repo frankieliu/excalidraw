@@ -33,6 +33,7 @@ import {
   ShapesSwitcher,
   CompactShapeActions,
 } from "./Actions";
+import { SubtypeToggles } from "./Subtypes";
 import { LoadingMessage } from "./LoadingMessage";
 import { LockButton } from "./LockButton";
 import { MobileMenu } from "./MobileMenu";
@@ -394,6 +395,7 @@ const LayerUI = ({
                             />
                           </Island>
                         )}
+                        <SubtypeToggles />
                       </Stack.Row>
                     </Stack.Col>
                   </div>

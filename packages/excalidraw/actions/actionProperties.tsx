@@ -147,6 +147,8 @@ import { getShortcutKey } from "../shortcut";
 
 import { register } from "./register";
 
+import { getSubtypeMethods } from "../subtypes";
+
 import type { AppClassProperties, AppState, Primitive } from "../types";
 
 const FONT_SIZE_RELATIVE_INCREASE_STEP = 0.1;
@@ -231,7 +233,7 @@ const offsetElementAfterFontResize = (
   if (isBoundToContainer(nextElement) || !nextElement.autoResize) {
     return nextElement;
   }
-  return scene.mutateElement(nextElement, {
+  const offsetUpdates = {
     x:
       prevElement.textAlign === "left"
         ? prevElement.x
@@ -241,7 +243,12 @@ const offsetElementAfterFontResize = (
     // centering vertically is non-standard, but for Excalidraw I think
     // it makes sense
     y: prevElement.y + (prevElement.height - nextElement.height) / 2,
-  });
+  };
+
+  console.log("[DEBUG offsetElementAfterFontResize] Calculated offsets:", offsetUpdates);
+
+  // Apply offset to nextElement and return new element instead of mutating scene
+  return newElementWith(nextElement, offsetUpdates);
 };
 
 const changeFontSize = (
@@ -264,17 +271,59 @@ const changeFontSize = (
         let newElement: ExcalidrawTextElement = newElementWith(oldElement, {
           fontSize: newFontSize,
         });
-        redrawTextBoundingBox(
+
+        // Get subtype methods if element has a subtype
+        let customMeasureFn;
+        let customWrapFn;
+        if (newElement.subtype) {
+          console.log("[DEBUG changeFontSize] Element has subtype:", newElement.subtype, "old fontSize:", oldElement.fontSize, "new fontSize:", newElement.fontSize);
+          const methods = getSubtypeMethods(newElement.subtype);
+          if (methods?.measureText) {
+            customMeasureFn = (text: string) => {
+              console.log("[DEBUG customMeasureFn] Called with text:", text, "fontSize:", newElement.fontSize);
+              const result = methods.measureText(newElement, {
+                fontSize: newElement.fontSize,
+                text,
+              });
+              console.log("[DEBUG customMeasureFn] Returning dimensions:", result);
+              return result;
+            };
+          }
+          if (methods?.wrapText) {
+            customWrapFn = (text: string, _font: string, maxWidth: number) => {
+              console.log("[DEBUG customWrapFn] Called with text:", text, "maxWidth:", maxWidth);
+              const result = methods.wrapText(newElement, maxWidth, {
+                fontSize: newElement.fontSize,
+                text,
+              });
+              console.log("[DEBUG customWrapFn] Returning text:", result);
+              return result;
+            };
+          }
+          console.log("[DEBUG changeFontSize] Got subtype methods, customMeasureFn:", !!customMeasureFn, "customWrapFn:", !!customWrapFn);
+        }
+
+        console.log("[DEBUG changeFontSize] Before redrawTextBoundingBox - width:", newElement.width, "height:", newElement.height);
+        const textUpdates = redrawTextBoundingBox(
           newElement,
           app.scene.getContainerElement(oldElement),
           app.scene,
+          customMeasureFn,
+          customWrapFn,
         );
+        console.log("[DEBUG changeFontSize] Got updates from redrawTextBoundingBox:", textUpdates);
+
+        // Apply the updates to newElement
+        newElement = newElementWith(newElement, textUpdates);
+        console.log("[DEBUG changeFontSize] After applying updates - width:", newElement.width, "height:", newElement.height);
 
         newElement = offsetElementAfterFontResize(
           oldElement,
           newElement,
           app.scene,
         );
+
+        console.log("[DEBUG changeFontSize] After offsetElementAfterFontResize - width:", newElement.width, "height:", newElement.height);
 
         return newElement;
       }
@@ -291,6 +340,9 @@ const changeFontSize = (
       updateBoundElements(element, app.scene);
     }
   });
+
+  // Trigger scene update to ensure math elements re-render
+  app.scene.triggerUpdate();
 
   return {
     elements: updatedElements,

@@ -14,6 +14,7 @@ import type {
   Action,
   UpdaterFn,
   ActionName,
+  CustomActionName,
   ActionResult,
   PanelComponentProps,
   ActionSource,
@@ -50,7 +51,7 @@ const trackAction = (
 };
 
 export class ActionManager {
-  actions = {} as Record<ActionName, Action>;
+  actions = {} as Record<ActionName | CustomActionName, Action>;
 
   updater: (actionResult: ActionResult | Promise<ActionResult>) => void;
 
