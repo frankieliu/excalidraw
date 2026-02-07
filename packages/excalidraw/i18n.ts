@@ -170,3 +170,15 @@ export const useI18n = () => {
   const langCode = useAtomValue(editorLangCodeAtom);
   return { t, langCode };
 };
+
+// Type for custom language data loaders (used by subtypes)
+export type LangLdr = (langCode: string) => Promise<any>;
+
+// Placeholder for registering custom language data (used by subtypes)
+export const registerCustomLangData = (
+  fallbackLangData: any,
+  setLanguageAux: LangLdr,
+) => {
+  // TODO: Implement custom language data registration for subtypes
+  // This is a placeholder to allow subtypes to work
+};

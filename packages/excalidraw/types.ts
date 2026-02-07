@@ -325,6 +325,8 @@ export interface AppState {
     // indicates if the current tool is temporarily switched on from the selection tool
     fromSelection: boolean;
   } & ActiveTool;
+  activeSubtypes?: string[];
+  customData?: Record<string, Record<string, any>>;
   preferredSelectionTool: {
     type: "selection" | "lasso";
     initialized: boolean;
@@ -898,6 +900,7 @@ export interface ExcalidrawImperativeAPI {
   onUserFollow: (
     callback: (payload: OnUserFollowedPayload) => void,
   ) => UnsubscribeCallback;
+  addSubtype: InstanceType<typeof App>["addSubtype"];
 }
 
 export type FrameNameBounds = {

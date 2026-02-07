@@ -257,6 +257,15 @@ import {
   getUncroppedWidthAndHeight,
 } from "@excalidraw/element";
 
+import {
+  prepareSubtype,
+  checkRefreshOnSubtypeLoad,
+  type SubtypeRecord,
+  type SubtypePrepFn,
+  type SubtypeMethods,
+  selectSubtype,
+} from "../subtypes";
+
 import type { GlobalPoint, LocalPoint, Radians } from "@excalidraw/math";
 
 import type {
@@ -777,6 +786,7 @@ class App extends React.Component<AppProps, AppState> {
         onPointerUp: (cb) => this.onPointerUpEmitter.on(cb),
         onScrollChange: (cb) => this.onScrollChangeEmitter.on(cb),
         onUserFollow: (cb) => this.onUserFollowEmitter.on(cb),
+        addSubtype: this.addSubtype,
       } as const;
       if (typeof excalidrawAPI === "function") {
         excalidrawAPI(api);
@@ -5287,6 +5297,23 @@ class App extends React.Component<AppProps, AppState> {
         activeTool: nextActiveTool,
       };
     });
+  };
+
+  addSubtype = (
+    record: SubtypeRecord,
+    subtypePrepFn: SubtypePrepFn,
+  ): { actions: readonly Action[] | null; methods: Partial<SubtypeMethods> } => {
+    const onSubtypeLoaded = (hasSubtype: (element: ExcalidrawElement) => boolean) => {
+      if (
+        checkRefreshOnSubtypeLoad(
+          hasSubtype,
+          this.scene.getNonDeletedElements(),
+        )
+      ) {
+        this.scene.triggerUpdate();
+      }
+    };
+    return prepareSubtype(record, subtypePrepFn, onSubtypeLoaded);
   };
 
   setOpenDialog = (dialogType: AppState["openDialog"]) => {

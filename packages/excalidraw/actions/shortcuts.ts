@@ -5,7 +5,7 @@ import type { SubtypeOf } from "@excalidraw/common/utility-types";
 import { t } from "../i18n";
 import { getShortcutKey } from "../shortcut";
 
-import type { ActionName } from "./types";
+import type { ActionName, CustomActionName } from "./types";
 
 export type ShortcutName =
   | SubtypeOf<
@@ -126,6 +126,24 @@ const shortcutMap: Record<ShortcutName, string[]> = {
 export const getShortcutFromShortcutName = (name: ShortcutName, idx = 0) => {
   const shortcuts = shortcutMap[name];
   // if multiple shortcuts available, take the first one
+  return shortcuts && shortcuts.length > 0
+    ? shortcuts[idx] || shortcuts[0]
+    : "";
+};
+
+// Custom shortcuts map for subtypes
+const customShortcutMap: Record<string, string[]> = {};
+
+// Register custom shortcuts for subtypes
+export const registerCustomShortcuts = (
+  shortcuts: Record<CustomActionName, string[]>,
+) => {
+  Object.assign(customShortcutMap, shortcuts);
+};
+
+// Get custom shortcut for subtype actions
+export const getCustomShortcut = (name: CustomActionName, idx = 0) => {
+  const shortcuts = customShortcutMap[name];
   return shortcuts && shortcuts.length > 0
     ? shortcuts[idx] || shortcuts[0]
     : "";

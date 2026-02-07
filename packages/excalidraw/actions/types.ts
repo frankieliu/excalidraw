@@ -146,6 +146,22 @@ export type ActionName =
   | "importSVG"
   | "importExcalidraw";
 
+// Custom action name type for subtypes (string-based)
+export type CustomActionName = string & { __brand: "CustomActionName" };
+
+// Helper to create custom action names for subtypes
+export const makeCustomActionName = (name: string): CustomActionName => {
+  return name as CustomActionName;
+};
+
+// Action predicate function type for subtype actions
+export type ActionPredicateFn = (
+  action: Action,
+  elements: readonly ExcalidrawElement[],
+  appState: AppState,
+  app: AppClassProperties,
+) => boolean;
+
 export type PanelComponentProps = {
   elements: readonly ExcalidrawElement[];
   appState: AppState;
@@ -160,7 +176,7 @@ export type PanelComponentProps = {
 };
 
 export interface Action<TData = any> {
-  name: ActionName;
+  name: ActionName | CustomActionName;
   label:
     | string
     | ((
