@@ -90,10 +90,6 @@ export const redrawTextBoundingBox = (
   const wrapTextFn = customWrapFn || wrapText;
   const measureTextFn = customMeasureFn || measureText;
 
-  console.log("[DEBUG redrawTextBoundingBox] Element:", textElement.id, "subtype:", (textElement as any).subtype, "fontSize:", textElement.fontSize);
-  console.log("[DEBUG redrawTextBoundingBox] Using custom functions:", !!customMeasureFn, !!customWrapFn);
-  console.log("[DEBUG redrawTextBoundingBox] Before - width:", textElement.width, "height:", textElement.height);
-
   if (container || !textElement.autoResize) {
     maxWidth = container
       ? getBoundTextMaxWidth(container, textElement)
@@ -105,13 +101,11 @@ export const redrawTextBoundingBox = (
     );
   }
 
-  console.log("[DEBUG redrawTextBoundingBox] Calling measureText with text:", boundTextUpdates.text);
   const metrics = measureTextFn(
     boundTextUpdates.text,
     getFontString(textElement),
     textElement.lineHeight,
   );
-  console.log("[DEBUG redrawTextBoundingBox] Metrics from measureText:", metrics);
 
   // Note: only update width for unwrapped text and bound texts (which always have autoResize set to true)
   if (textElement.autoResize) {
@@ -158,9 +152,7 @@ export const redrawTextBoundingBox = (
     boundTextUpdates.y = y;
   }
 
-  console.log("[DEBUG redrawTextBoundingBox] About to mutate with updates:", { width: boundTextUpdates.width, height: boundTextUpdates.height, x: boundTextUpdates.x, y: boundTextUpdates.y });
   scene.mutateElement(textElement, boundTextUpdates);
-  console.log("[DEBUG redrawTextBoundingBox] After mutation - element from scene:", scene.getElement(textElement.id));
 
   // Return the updates so caller can apply them if needed
   return {

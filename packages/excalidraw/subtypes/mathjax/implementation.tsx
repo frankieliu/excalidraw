@@ -918,7 +918,6 @@ const getMathEditorStyle = function (element) {
 } as SubtypeMethods["getEditorStyle"];
 
 const measureMathElement = function (element, next) {
-  console.log("[DEBUG measureMathElement] element.fontSize:", element.fontSize, "next:", next);
   ensureMathElement(element);
   const isMathJaxLoaded = mathJaxLoaded;
   if (!isMathJaxLoaded && isMathElement(element as ExcalidrawElement)) {
@@ -926,7 +925,6 @@ const measureMathElement = function (element, next) {
     return { width, height };
   }
   const fontSize = next?.fontSize ?? element.fontSize;
-  console.log("[DEBUG measureMathElement] Using fontSize:", fontSize);
   const lineHeight = element.lineHeight;
   const text = next?.text ?? element.text;
   const customData = next?.customData ?? element.customData;
@@ -942,17 +940,14 @@ const measureMathElement = function (element, next) {
 } as SubtypeMethods["measureText"];
 
 const renderMathElement = function (element, elementMap, context, renderConfig) {
-  console.log("[DEBUG] renderMathElement called for element:", element.id, "subtype:", element.subtype, "text:", element.text);
   ensureMathElement(element);
   const isMathJaxLoaded = mathJaxLoaded;
-  console.log("[DEBUG] MathJax loaded:", isMathJaxLoaded);
 
   try {
     const _element = element as NonDeleted<ExcalidrawMathElement>;
   const text = _element.text;
   const fontSize = _element.fontSize;
   const lineHeight = _element.lineHeight;
-  console.log("[DEBUG renderMathElement] Using fontSize:", fontSize, "lineHeight:", lineHeight, "full element:", _element);
   const strokeColor = _element.strokeColor;
   const textAlign = _element.textAlign;
   const opacity = _element.opacity / 100;
@@ -999,24 +994,19 @@ const renderMathElement = function (element, elementMap, context, renderConfig) 
         1,
         mathProps,
       );
-      console.log("[DEBUG doRenderChild] Cache key:", key, "fontSize:", fontSize);
 
       const _x = Math.round(x);
       const _y = Math.round(y);
       const imgKey = `${key}, ${width}, ${height}`;
-      console.log("[DEBUG doRenderChild] Full imgKey:", imgKey);
-      console.log("[DEBUG doRenderChild] Cache hit:", !!(isMathJaxLoaded && imageCache[imgKey] && imageCache[imgKey] !== undefined));
       if (
         isMathJaxLoaded &&
         imageCache[imgKey] &&
         imageCache[imgKey] !== undefined
       ) {
         const img = imageCache[imgKey];
-        console.log("[DEBUG doRenderChild] Using cached image");
         const [width, height] = [img.naturalWidth, img.naturalHeight];
         context.drawImage(img, _x, _y, width, height);
       } else {
-        console.log("[DEBUG doRenderChild] Generating new image");
         const img = new Image();
         _svg.setAttribute("width", `${width}`);
         _svg.setAttribute("height", `${height}`);
@@ -1041,7 +1031,6 @@ const renderMathElement = function (element, elementMap, context, renderConfig) 
                 imageCache[imgKey] = img;
               }
               // Trigger re-render after async image load
-              console.log("[DEBUG doRenderChild] Image loaded, calling onAsyncRender");
               if (onAsyncRender) {
                 onAsyncRender();
               }
@@ -1086,9 +1075,8 @@ const renderMathElement = function (element, elementMap, context, renderConfig) 
     parentWidth,
   );
   context.restore();
-  console.log("[DEBUG] renderMathElement completed successfully for element:", element.id);
   } catch (error) {
-    console.error("[DEBUG] Error in renderMathElement:", error);
+    console.error("Error in renderMathElement:", error);
     throw error;
   }
 } as SubtypeMethods["render"];
