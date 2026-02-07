@@ -85,7 +85,7 @@
     "pwacompat": "2.0.17",
     "roughjs": "4.6.4",
     "sass": "1.51.0",
-    "svg-to-excalidraw": "file:../../../svg-to-excalidraw",
+    "svg-to-excalidraw": "^0.0.2",
     "tunnel-rat": "0.1.2"
   },
   "devDependencies": {
