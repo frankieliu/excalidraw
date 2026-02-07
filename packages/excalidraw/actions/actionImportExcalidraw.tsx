@@ -1,10 +1,10 @@
 import { register } from "./register";
-import { StoreAction } from "../store";
 import { t } from "../i18n";
-import { KEYS } from "../keys";
+import { KEYS } from "@excalidraw/common";
 import { isValidExcalidrawData } from "../data/json";
-import { getCommonBounds } from "../element/bounds";
-import { getNonDeletedElements } from "../element";
+import { getCommonBounds } from "@excalidraw/element/bounds";
+import { getNonDeletedElements } from "@excalidraw/element";
+import { CaptureUpdateAction } from "@excalidraw/element";
 
 export const actionImportExcalidraw = register({
   name: "importExcalidraw",
@@ -31,6 +31,7 @@ export const actionImportExcalidraw = register({
         // Validate Excalidraw data
         if (!isValidExcalidrawData(data)) {
           app.syncActionResult({
+            captureUpdate: CaptureUpdateAction.EVENTUALLY,
             appState: {
               ...app.state,
               toast: {
@@ -39,7 +40,6 @@ export const actionImportExcalidraw = register({
                 duration: 5000,
               },
             },
-            storeAction: StoreAction.NONE,
           });
           document.body.removeChild(input);
           return;
@@ -49,6 +49,7 @@ export const actionImportExcalidraw = register({
 
         if (importedElements.length === 0) {
           app.syncActionResult({
+            captureUpdate: CaptureUpdateAction.EVENTUALLY,
             appState: {
               ...app.state,
               toast: {
@@ -57,7 +58,6 @@ export const actionImportExcalidraw = register({
                 duration: 3000,
               },
             },
-            storeAction: StoreAction.NONE,
           });
           document.body.removeChild(input);
           return;
@@ -141,6 +141,7 @@ export const actionImportExcalidraw = register({
 
         // Show success toast
         app.syncActionResult({
+          captureUpdate: CaptureUpdateAction.EVENTUALLY,
           appState: {
             ...app.state,
             toast: {
@@ -151,11 +152,11 @@ export const actionImportExcalidraw = register({
               duration: 3000,
             },
           },
-          storeAction: StoreAction.CAPTURE,
         });
       } catch (error: any) {
         console.error("Excalidraw import failed:", error);
         app.syncActionResult({
+          captureUpdate: CaptureUpdateAction.EVENTUALLY,
           appState: {
             ...app.state,
             toast: {
@@ -166,7 +167,6 @@ export const actionImportExcalidraw = register({
               duration: 5000,
             },
           },
-          storeAction: StoreAction.NONE,
         });
       } finally {
         // Cleanup
@@ -180,7 +180,7 @@ export const actionImportExcalidraw = register({
     input.click();
 
     return {
-      storeAction: StoreAction.NONE,
+      captureUpdate: CaptureUpdateAction.NEVER,
     };
   },
   keyTest: (event) =>

@@ -1,10 +1,9 @@
 import { register } from "./register";
-import { StoreAction } from "../store";
 import { t } from "../i18n";
-import { randomId } from "../random";
-import { KEYS } from "../keys";
-import type { ExcalidrawElement } from "../element/types";
-import { newElementWith } from "../element/mutateElement";
+import { randomId, KEYS } from "@excalidraw/common";
+import type { ExcalidrawElement } from "@excalidraw/element/types";
+import { newElementWith } from "@excalidraw/element/mutateElement";
+import { CaptureUpdateAction } from "@excalidraw/element";
 
 // @ts-ignore - local package
 import svgToEx from "svg-to-excalidraw";
@@ -41,6 +40,7 @@ export const actionImportSVG = register({
             : "Unknown error";
 
           app.syncActionResult({
+            captureUpdate: CaptureUpdateAction.EVENTUALLY,
             appState: {
               ...app.state,
               toast: {
@@ -51,7 +51,6 @@ export const actionImportSVG = register({
                 duration: 5000,
               },
             },
-            storeAction: StoreAction.NONE,
           });
           document.body.removeChild(input);
           return;
@@ -63,6 +62,7 @@ export const actionImportSVG = register({
 
         if (importedElements.length === 0) {
           app.syncActionResult({
+            captureUpdate: CaptureUpdateAction.EVENTUALLY,
             appState: {
               ...app.state,
               toast: {
@@ -71,7 +71,6 @@ export const actionImportSVG = register({
                 duration: 3000,
               },
             },
-            storeAction: StoreAction.NONE,
           });
           document.body.removeChild(input);
           return;
@@ -97,6 +96,7 @@ export const actionImportSVG = register({
 
         // Show success toast
         app.syncActionResult({
+          captureUpdate: CaptureUpdateAction.EVENTUALLY,
           appState: {
             ...app.state,
             toast: {
@@ -107,11 +107,11 @@ export const actionImportSVG = register({
               duration: 3000,
             },
           },
-          storeAction: StoreAction.CAPTURE,
         });
       } catch (error: any) {
         console.error("SVG import failed:", error);
         app.syncActionResult({
+          captureUpdate: CaptureUpdateAction.EVENTUALLY,
           appState: {
             ...app.state,
             toast: {
@@ -122,7 +122,6 @@ export const actionImportSVG = register({
               duration: 5000,
             },
           },
-          storeAction: StoreAction.NONE,
         });
       } finally {
         // Cleanup
@@ -136,7 +135,7 @@ export const actionImportSVG = register({
     input.click();
 
     return {
-      storeAction: StoreAction.NONE,
+      captureUpdate: CaptureUpdateAction.NEVER,
     };
   },
   keyTest: (event) =>
