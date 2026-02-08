@@ -12,8 +12,18 @@ import {
   isSubtypeAction,
   isValidSubtype,
   subtypeCollides,
+  getSubtypeMethods,
 } from "../subtypes";
 import type { ExcalidrawElement, Theme } from "@excalidraw/element/types";
+import {
+  isTextElement,
+  newElementWith,
+  redrawTextBoundingBox,
+  getBoundTextElement,
+  hasBoundTextElement,
+  getContainerElement,
+  isBindableElement,
+} from "@excalidraw/element";
 import {
   useExcalidrawActionManager,
   useExcalidrawContainer,
@@ -39,7 +49,108 @@ export const SubtypeButton = (
       // Always show the subtype button - the active state is handled by className
       return true;
     },
-    perform: (elements, appState) => {
+    perform: (elements, appState, _value, app) => {
+      // Get selected text elements
+      const selectedTextElements = elements.filter(
+        (el) => appState.selectedElementIds[el.id] && isTextElement(el),
+      );
+
+      // Get selected containers with bound text
+      const selectedContainersWithText = elements.filter(
+        (el) =>
+          appState.selectedElementIds[el.id] &&
+          isBindableElement(el) &&
+          hasBoundTextElement(el),
+      );
+
+      // Get the bound text elements from selected containers
+      const boundTextElementsFromContainers: ExcalidrawElement[] = [];
+      const elementsMap = app.scene.getNonDeletedElementsMap();
+      for (const container of selectedContainersWithText) {
+        const boundText = getBoundTextElement(container, elementsMap);
+        if (boundText) {
+          boundTextElementsFromContainers.push(boundText);
+        }
+      }
+
+      // Combine all text elements that should be toggled
+      const allTextToToggle = [
+        ...selectedTextElements,
+        ...boundTextElementsFromContainers,
+      ];
+
+      // If text elements are selected (directly or via containers), toggle their subtype
+      if (allTextToToggle.length > 0) {
+        const subtypeMethods = getSubtypeMethods(subtype);
+
+        // Create a Set of text element IDs to toggle for efficient lookup
+        const textIdsToToggle = new Set(allTextToToggle.map((el) => el.id));
+
+        const updatedElements = elements.map((el) => {
+          // Only process text elements that should be toggled
+          if (!textIdsToToggle.has(el.id) || !isTextElement(el)) {
+            return el;
+          }
+
+          // Toggle: if element has this subtype, remove it; otherwise add it
+          const hasSubtype = el.subtype === subtype;
+
+          if (hasSubtype) {
+            // Remove subtype - convert to regular text
+            const { subtype: _, customData: __, ...rest } = el as any;
+            const newElement = newElementWith(el, {
+              ...rest,
+              subtype: undefined,
+              customData: undefined,
+            });
+
+            // Use standard measurement for regular text
+            const container = getContainerElement(newElement, app.scene.getNonDeletedElementsMap());
+            redrawTextBoundingBox(newElement, container, app.scene);
+
+            return newElement;
+          } else {
+            // Add subtype - convert to math text
+            const customData = appState.customData?.[subtype] || {};
+            const newElement = newElementWith(el, {
+              subtype,
+              customData,
+            });
+
+            // Use subtype's measurement if available
+            const container = getContainerElement(newElement, app.scene.getNonDeletedElementsMap());
+
+            if (subtypeMethods?.measureText && subtypeMethods?.wrapText) {
+              const customMeasureFn = (text: string, font: string, lineHeight: number) => {
+                return subtypeMethods.measureText(newElement, {
+                  text,
+                  fontSize: newElement.fontSize,
+                });
+              };
+              const customWrapFn = (text: string, font: string, maxWidth: number) => {
+                return subtypeMethods.wrapText(newElement, maxWidth, {
+                  text,
+                  fontSize: newElement.fontSize,
+                });
+              };
+
+              redrawTextBoundingBox(newElement, container, app.scene, customMeasureFn, customWrapFn);
+            } else {
+              redrawTextBoundingBox(newElement, container, app.scene);
+            }
+
+            return newElement;
+          }
+        });
+
+        return {
+          elements: updatedElements,
+          appState,
+          captureUpdate: "IMMEDIATELY",
+        };
+      }
+
+      // No text selected - original behavior (toggle active tool)
       const inactive = !appState.activeSubtypes?.includes(subtype);
       const activeSubtypes: Subtype[] = [];
       if (appState.activeSubtypes) {
@@ -80,42 +191,75 @@ export const SubtypeButton = (
       };
     },
     keyTest,
-    PanelComponent: ({ elements, appState, updateData, data }) => (
-      <button
-        className={clsx("ToolIcon_type_button", "ToolIcon_type_button--show", {
-          ToolIcon: true,
-          "ToolIcon--selected":
-            appState.activeSubtypes !== undefined &&
-            appState.activeSubtypes.includes(subtype),
-          "ToolIcon--plain": true,
-        })}
-        title={`${t(`toolBar.${subtype}` as any)}${title}`}
-        aria-label={t(`toolBar.${subtype}` as any)}
-        onClick={() => {
-          updateData(null);
-        }}
-        onContextMenu={
-          data && "onContextMenu" in data
-            ? (event: React.MouseEvent) => {
-                if (
-                  appState.activeSubtypes === undefined ||
-                  (appState.activeSubtypes !== undefined &&
-                    !appState.activeSubtypes.includes(subtype))
-                ) {
-                  updateData(null);
+    PanelComponent: ({ elements, appState, updateData, data }) => {
+      // Check if any selected text elements have this subtype
+      const selectedTextElements = elements.filter(
+        (el) => appState.selectedElementIds[el.id] && isTextElement(el),
+      );
+      const hasSelectedMathText = selectedTextElements.some((el) => el.subtype === subtype);
+
+      // Check if any selected containers have bound text with this subtype
+      // Build elementsMap from elements array
+      const elementsMap = new Map(elements.map((el) => [el.id, el]));
+      const selectedContainersWithMathText = elements.some((el) => {
+        if (
+          appState.selectedElementIds[el.id] &&
+          isBindableElement(el) &&
+          hasBoundTextElement(el)
+        ) {
+          const boundText = getBoundTextElement(el, elementsMap);
+          return boundText?.subtype === subtype;
+        }
+        return false;
+      });
+
+      // Determine if button should be selected
+      const isSelected = hasSelectedMathText ||
+        selectedContainersWithMathText ||
+        (appState.activeSubtypes !== undefined && appState.activeSubtypes.includes(subtype));
+
+      // Update tooltip based on context
+      const hasTextSelection = selectedTextElements.length > 0 || selectedContainersWithMathText;
+      const baseLabel = t(`toolBar.${subtype}` as any);
+      const tooltipText = hasTextSelection
+        ? `Toggle ${baseLabel}${title}`
+        : `${baseLabel}${title}`;
+
+      return (
+        <button
+          className={clsx("ToolIcon_type_button", "ToolIcon_type_button--show", {
+            ToolIcon: true,
+            "ToolIcon--selected": isSelected,
+            "ToolIcon--plain": true,
+          })}
+          title={tooltipText}
+          aria-label={t(`toolBar.${subtype}` as any)}
+          onClick={() => {
+            updateData(null);
+          }}
+          onContextMenu={
+            data && "onContextMenu" in data
+              ? (event: React.MouseEvent) => {
+                  if (
+                    appState.activeSubtypes === undefined ||
+                    (appState.activeSubtypes !== undefined &&
+                      !appState.activeSubtypes.includes(subtype))
+                  ) {
+                    updateData(null);
+                  }
+                  data.onContextMenu(event, subtype);
                 }
-                data.onContextMenu(event, subtype);
-              }
-            : undefined
-        }
-      >
-        {
-          <div className="ToolIcon__icon" aria-hidden="true">
-            {icon.call(this, { theme: appState.theme })}
-          </div>
-        }
-      </button>
-    ),
+              : undefined
+          }
+        >
+          {
+            <div className="ToolIcon__icon" aria-hidden="true">
+              {icon.call(this, { theme: appState.theme })}
+            </div>
+          }
+        </button>
+      );
+    },
   };
   if (key === "") {
     delete subtypeAction.keyTest;
