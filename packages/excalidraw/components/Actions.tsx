@@ -228,12 +228,7 @@ export const SelectedShapeActions = ({
         <>
           {renderAction("changeFontFamily")}
           {renderAction("changeFontSize")}
-          {(() => {
-            console.log("[MATH DEBUG] About to renderAction changeMathOnly");
-            const result = renderAction("changeMathOnly");
-            console.log("[MATH DEBUG] renderAction result:", result);
-            return result;
-          })()}
+          {renderAction("changeMathOnly")}
           {(appState.activeTool.type === "text" ||
             suppportsHorizontalAlign(targetElements, elementsMap)) &&
             renderAction("changeTextAlign")}

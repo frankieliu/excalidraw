@@ -1081,6 +1081,12 @@ export const updateBoundElements = (
   options?: {
     simultaneouslyUpdated?: readonly ExcalidrawElement[];
     changedElements?: Map<string, ExcalidrawElement>;
+    customMeasureFn?: (
+      text: string,
+      font: string,
+      lineHeight: number,
+    ) => { width: number; height: number };
+    customWrapFn?: (text: string, font: string, maxWidth: number) => string;
   },
 ) => {
   if (!isBindableElement(changedElement)) {
@@ -1170,7 +1176,14 @@ export const updateBoundElements = (
 
     const boundText = getBoundTextElement(element, elementsMap);
     if (boundText && !boundText.isDeleted) {
-      handleBindTextResize(element, scene, false);
+      handleBindTextResize(
+        element,
+        scene,
+        false,
+        false,
+        options?.customMeasureFn,
+        options?.customWrapFn,
+      );
     }
   });
 };

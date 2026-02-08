@@ -169,6 +169,7 @@ import {
   normalizeSVG,
   updateImageCache as _updateImageCache,
   getBoundTextElement,
+  getBoundTextMaxWidth,
   getContainerCenter,
   getContainerElement,
   isValidTextContainer,
@@ -644,6 +645,35 @@ class App extends React.Component<AppProps, AppState> {
 
   private handleToastClose = () => {
     this.setToast(null);
+  };
+
+  private getMathMeasurementOptions = (element: ExcalidrawElement) => {
+    // Get the bound text element if this is a container
+    const boundText = hasBoundTextElement(element)
+      ? getBoundTextElement(element, this.scene.getNonDeletedElementsMap())
+      : null;
+
+    // Check if the bound text has a math subtype
+    if (boundText?.subtype) {
+      const methods = getSubtypeMethods(boundText.subtype);
+      if (methods?.measureText && methods?.wrapText) {
+        return {
+          customMeasureFn: (text: string, font: string, lineHeight: number) => {
+            return methods.measureText(boundText, {
+              text,
+              fontSize: boundText.fontSize,
+            });
+          },
+          customWrapFn: (text: string, font: string, maxWidth: number) => {
+            return methods.wrapText(boundText, maxWidth, {
+              text,
+              fontSize: boundText.fontSize,
+            });
+          },
+        };
+      }
+    }
+    return {};
   };
 
   private elementsPendingErasure: ElementsPendingErasure = new Set();
@@ -4851,6 +4881,7 @@ class App extends React.Component<AppProps, AppState> {
 
           updateBoundElements(element, this.scene, {
             simultaneouslyUpdated: selectedElements,
+            ...this.getMathMeasurementOptions(element),
           });
         });
 
@@ -5488,7 +5519,7 @@ class App extends React.Component<AppProps, AppState> {
       onChange: withBatchedUpdates((nextOriginalText) => {
         updateElement(nextOriginalText, false);
         if (isNonDeletedElement(element)) {
-          updateBoundElements(element, this.scene);
+          updateBoundElements(element, this.scene, this.getMathMeasurementOptions(element));
         }
       }),
       onSubmit: withBatchedUpdates(({ viaKeyboard, nextOriginalText }) => {
@@ -5503,36 +5534,33 @@ class App extends React.Component<AppProps, AppState> {
             if (updatedElement && isTextElement(updatedElement)) {
               const container = this.scene.getContainerElement(updatedElement);
 
-              // Use subtype methods to get correct dimensions
-              const containerWidth = container
-                ? getBoundTextMaxWidth(container, updatedElement)
-                : updatedElement.width;
-
-              let text = nextOriginalText;
-              if (container || !updatedElement.autoResize) {
-                text = methods.wrapText(updatedElement, containerWidth, {
+              // Create custom measurement functions that use the subtype's methods
+              const customMeasureFn = (text: string, font: string, lineHeight: number) => {
+                return methods.measureText(updatedElement, {
+                  text,
                   fontSize: updatedElement.fontSize,
-                  text: nextOriginalText,
                 });
-              }
+              };
 
-              const dimensions = methods.measureText(updatedElement, {
-                fontSize: updatedElement.fontSize,
-                text,
+              const customWrapFn = (text: string, font: string, maxWidth: number) => {
+                return methods.wrapText(updatedElement, maxWidth, {
+                  text,
+                  fontSize: updatedElement.fontSize,
+                });
+              };
+
+              // Update the element text first
+              const wrappedElement = newElementWith(updatedElement, {
+                text: nextOriginalText,
               });
 
-              // Update element with correct math dimensions
-              this.scene.replaceAllElements(
-                this.scene.getElementsIncludingDeleted().map((el) => {
-                  if (el.id === element.id && isTextElement(el)) {
-                    return newElementWith(el, {
-                      text,
-                      width: dimensions.width,
-                      height: dimensions.height,
-                    });
-                  }
-                  return el;
-                }),
+              // Use redrawTextBoundingBox to recenter and resize the text on the container
+              redrawTextBoundingBox(
+                wrappedElement,
+                container,
+                this.scene,
+                customMeasureFn,
+                customWrapFn,
               );
             }
           }
@@ -5934,7 +5962,6 @@ class App extends React.Component<AppProps, AppState> {
 
     // Get subtype and customData from appState if a subtype is active
     const { subtype, customData } = selectSubtype(this.state, "text");
-    console.log("[DEBUG] startTextEditing - subtype:", subtype, "customData:", customData, "activeSubtypes:", this.state.activeSubtypes);
 
     const element =
       existingTextElement ||
@@ -5969,8 +5996,6 @@ class App extends React.Component<AppProps, AppState> {
         subtype,
         customData,
       });
-
-    console.log("[DEBUG] Created text element - id:", element.id, "subtype:", element.subtype, "customData:", element.customData);
 
     if (!existingTextElement && shouldBindToContainer && container) {
       this.scene.mutateElement(container, {
@@ -9702,7 +9727,7 @@ class App extends React.Component<AppProps, AppState> {
                   isBindableElement(element) &&
                   element.boundElements?.some((other) => other.type === "arrow")
                 ) {
-                  updateBoundElements(element, this.scene);
+                  updateBoundElements(element, this.scene, this.getMathMeasurementOptions(element));
                 }
               });
 
@@ -11912,7 +11937,7 @@ class App extends React.Component<AppProps, AppState> {
           ),
         );
 
-        updateBoundElements(croppingElement, this.scene);
+        updateBoundElements(croppingElement, this.scene, this.getMathMeasurementOptions(croppingElement));
 
         this.setState({
           isCropping: transformHandleType && transformHandleType !== "rotation",

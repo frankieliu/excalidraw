@@ -149,8 +149,6 @@ export class ActionManager {
   renderAction = (name: ActionName | CustomActionName, data?: PanelComponentProps["data"]) => {
     const canvasActions = this.app.props.UIOptions.canvasActions;
 
-    console.log("[MATH DEBUG renderAction] name:", name, "exists:", !!this.actions[name], "hasPanelComponent:", this.actions[name] && "PanelComponent" in this.actions[name]);
-
     if (
       this.actions[name] &&
       "PanelComponent" in this.actions[name] &&
@@ -159,14 +157,12 @@ export class ActionManager {
         : true)
     ) {
       const action = this.actions[name];
-      console.log("[MATH DEBUG renderAction] action found, checking predicate");
 
       // Check predicate if it exists
       if (action.predicate) {
         const elements = this.getElementsIncludingDeleted();
         const appState = this.getAppState();
         const predicateResult = action.predicate(elements, appState, this.app.props, this.app);
-        console.log("[MATH DEBUG renderAction] predicate result:", predicateResult);
         if (!predicateResult) {
           return null;
         }

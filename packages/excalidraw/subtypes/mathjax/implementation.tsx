@@ -60,17 +60,6 @@ const isMathElement = (
   const result = isTextElement(element) &&
     "subtype" in element &&
     element.subtype === mathSubtype;
-  if (element) {
-    console.log("[MATH DEBUG isMathElement]", {
-      id: element.id,
-      type: element.type,
-      subtype: (element as any).subtype,
-      mathSubtype,
-      isTextElement: isTextElement(element),
-      hasSubtype: "subtype" in element,
-      result
-    });
-  }
   return result;
 };
 
@@ -350,7 +339,6 @@ const joinMath = (
   mathProps: MathProps,
   isMathJaxLoaded: boolean,
 ) => {
-  console.log("[MATH DEBUG joinMath] Input array:", text, "mathOnly:", mathProps.mathOnly);
   const startDelimiter = getStartDelimiter(mathProps.useTex, true);
   const endDelimiter = getEndDelimiter(mathProps.useTex, true);
   let inText = true;
@@ -362,11 +350,9 @@ const joinMath = (
         : inText
         ? text[index]
         : startDelimiter + text[index] + endDelimiter;
-    console.log(`[MATH DEBUG joinMath] Index ${index} (inText=${inText}): "${text[index]}" -> "${segment}"`);
     joined += segment;
     inText = !inText;
   }
-  console.log("[MATH DEBUG joinMath] Result:", joined);
   return joined;
 };
 
@@ -382,32 +368,22 @@ const consumeMathNewlines = (
   mathProps: MathProps,
   isMathJaxLoaded: boolean,
 ) => {
-  console.log("[MATH DEBUG consumeMathNewlines] Input:", { text, mathOnly: mathProps.mathOnly, useTex: mathProps.useTex });
   if (!isMathJaxLoaded) {
     return text;
   }
   const tempText = splitMath(text.replace(/\r\n?/g, "\n"), mathProps);
-  console.log("[MATH DEBUG consumeMathNewlines] After splitMath:", tempText);
   // Only replace newlines in mixed mode (mathOnly: false) to preserve
   // multiline math in math-only mode
   if (mathProps.useTex || !mathProps.mathOnly) {
-    console.log("[MATH DEBUG consumeMathNewlines] Replacing newlines in math segments");
     for (let i = 0; i < tempText.length; i++) {
       // Only replace newlines in math segments (odd indices), not in text segments
       // This preserves newlines between separate math expressions like $x$\n$y$
       if (i % 2 === 1) {
-        const before = tempText[i];
         tempText[i] = tempText[i].replace(/\n/g, " ");
-        if (before !== tempText[i]) {
-          console.log(`[MATH DEBUG consumeMathNewlines] Index ${i}: "${before}" -> "${tempText[i]}"`);
-        }
       }
     }
-  } else {
-    console.log("[MATH DEBUG consumeMathNewlines] NOT replacing newlines (AsciiMath mathOnly mode)");
   }
   const result = joinMath(tempText, mathProps, isMathJaxLoaded);
-  console.log("[MATH DEBUG consumeMathNewlines] After joinMath:", result);
   return result;
 };
 
@@ -550,12 +526,9 @@ const markupText = (
   mathProps: MathProps,
   isMathJaxLoaded: boolean,
 ) => {
-  console.log("[MATH DEBUG markupText] Input text:", text, "mathOnly:", mathProps.mathOnly);
   const processedText = consumeMathNewlines(text, mathProps, isMathJaxLoaded);
   const newlineSeparator = isMathJaxLoaded ? getMathNewline(mathProps) : "\n";
-  console.log("[MATH DEBUG markupText] After consumeMathNewlines:", processedText, "splitting by:", JSON.stringify(newlineSeparator));
   const lines = processedText.split(newlineSeparator);
-  console.log("[MATH DEBUG markupText] Lines array:", lines);
   const markup = [] as Array<string>[];
   const aria = [] as Array<string>[];
   for (let index = 0; index < lines.length; index++) {
@@ -573,7 +546,6 @@ const markupText = (
       mathProps.mathOnly || !isMathJaxLoaded
         ? [lines[index]]
         : splitMath(lines[index], mathProps);
-    console.log(`[MATH DEBUG markupText] Line ${index} array (mathOnly=${mathProps.mathOnly}):`, lineArray);
     for (let i = 0; i < lineArray.length; i++) {
       // Don't guard the following as "isMathJaxLoaded && i % 2 === 1"
       // in order to ensure math2Svg() actually gets called, and thus
@@ -593,7 +565,6 @@ const markupText = (
       aria[index].push("");
     }
   }
-  console.log("[MATH DEBUG markupText] Final markup:", markup.length, "lines");
   return { markup, aria };
 };
 
@@ -804,11 +775,7 @@ const renderMath = (
   const mathLines = consumeMathNewlines(text, mathProps, isMathJaxLoaded).split(
     isMathJaxLoaded ? getMathNewline(mathProps) : "\n",
   );
-  console.log("[MULTILINE DEBUG] Original text:", text);
-  console.log("[MULTILINE DEBUG] After consumeMathNewlines:", consumeMathNewlines(text, mathProps, isMathJaxLoaded));
-  console.log("[MULTILINE DEBUG] mathLines:", mathLines);
   const { markup, aria } = markupText(text, mathProps, isMathJaxLoaded);
-  console.log("[MULTILINE DEBUG] markup:", markup);
   const metrics = getMetrics(
     markup,
     fontSize,
@@ -816,11 +783,9 @@ const renderMath = (
     mathProps,
     isMathJaxLoaded,
   );
-  console.log("[MULTILINE DEBUG] metrics:", metrics);
   const width = parentWidth ?? metrics.imageMetrics.width;
 
   let y = -1;
-  console.log("[MULTILINE DEBUG] Starting y position:", y);
   for (let index = 0; index < markup.length; index++) {
     const lineMetrics = metrics.lineMetrics[index];
     const lineMarkupMetrics = metrics.markupMetrics[index];
@@ -833,7 +798,6 @@ const renderMath = (
         : (width - lineMetrics.width + 1) / 2;
     // Drop any empty strings from this line to match childMetrics
     const content = markup[index].filter((value) => value !== "");
-    console.log(`[MULTILINE DEBUG] Line ${index}: y=${y}, lineMetrics=`, lineMetrics, "content=", content);
     for (let i = 0; i < content.length; i += 1) {
       const mjx = textAsMjxContainer(
         content[mathProps.mathOnly ? 0 : i],
@@ -854,12 +818,10 @@ const renderMath = (
       const childY = nullContent ? 0 : lineMarkupMetrics[i].y;
       const childWidth = nullContent ? 0 : lineMarkupMetrics[i].width;
       const childHeight = nullContent ? 0 : lineMarkupMetrics[i].height;
-      console.log(`[MULTILINE DEBUG]   Child ${i}: rendering at (${x + childX}, ${y + childY}) with size ${childWidth}x${childHeight}`);
       // Now render the child
       doRenderChild(x + childX, y + childY, childWidth, childHeight);
     }
     y += lineMetrics.height;
-    console.log(`[MULTILINE DEBUG]   After line ${index}, y=${y}`);
   }
   let ariaText = "";
   for (let i = 0; i < aria.length; i++) {
@@ -881,9 +843,7 @@ const getImageMetrics = (
   isMathJaxLoaded: boolean,
   maxWidth?: number | null,
 ) => {
-  console.log("[MATH DEBUG getImageMetrics] Input:", { text, mathOnly: mathProps.mathOnly, maxWidth });
   const markup = markupText(text, mathProps, isMathJaxLoaded).markup;
-  console.log("[MATH DEBUG getImageMetrics] Markup lines:", markup.length, "content:", markup);
   const metrics = getMetrics(
     markup,
     fontSize,
@@ -892,7 +852,6 @@ const getImageMetrics = (
     isMathJaxLoaded,
     maxWidth,
   ).imageMetrics;
-  console.log("[MATH DEBUG getImageMetrics] Result metrics:", metrics);
   return metrics;
 };
 
@@ -965,15 +924,9 @@ const getMathEditorStyle = function (element) {
 } as SubtypeMethods["getEditorStyle"];
 
 const measureMathElement = function (element, next) {
-  console.log("[MATH DEBUG measureMathElement] Called with:", {
-    elementId: element.id,
-    text: next?.text ?? element.text,
-    mathOnly: (next?.customData ?? element.customData)?.mathOnly,
-    oldDimensions: {width: element.width, height: element.height}
-  });
-
   ensureMathElement(element);
   const isMathJaxLoaded = mathJaxLoaded;
+
   if (!isMathJaxLoaded && isMathElement(element as ExcalidrawElement)) {
     const { width, height } = element as ExcalidrawMathElement;
     return { width, height };
@@ -983,7 +936,6 @@ const measureMathElement = function (element, next) {
   const text = next?.text ?? element.text;
   const customData = next?.customData ?? element.customData;
   const mathProps = getMathProps.ensureMathProps(customData);
-  console.log("[MATH DEBUG measureMathElement] mathProps:", mathProps);
 
   const metrics = getImageMetrics(
     text,
@@ -992,7 +944,7 @@ const measureMathElement = function (element, next) {
     mathProps,
     isMathJaxLoaded,
   );
-  console.log("[MATH DEBUG measureMathElement] Returning:", metrics);
+
   return metrics;
 } as SubtypeMethods["measureText"];
 
@@ -1002,6 +954,7 @@ const renderMathElement = function (element, elementMap, context, renderConfig) 
 
   try {
     const _element = element as NonDeleted<ExcalidrawMathElement>;
+
   const text = _element.text;
   const fontSize = _element.fontSize;
   const lineHeight = _element.lineHeight;
@@ -1109,7 +1062,8 @@ const renderMathElement = function (element, elementMap, context, renderConfig) 
       context.restore();
     }
   };
-  const container = getContainerElement(_element, elementMap);
+  // Guard against undefined elementMap
+  const container = elementMap ? getContainerElement(_element, elementMap) : null;
   const parentWidth = container
     ? getBoundTextMaxWidth(container, _element)
     : undefined;
@@ -1198,7 +1152,8 @@ const renderSvgMathElement = function (
   }
   tempSvg.appendChild(groupNode);
 
-  const container = getContainerElement(_element, elementsMap);
+  // Guard against undefined elementsMap
+  const container = elementsMap ? getContainerElement(_element, elementsMap) : null;
   const parentWidth = container
     ? getBoundTextMaxWidth(container, _element)
     : undefined;
@@ -1451,13 +1406,10 @@ const enableActionChangeMathProps = (
   appState: AppState,
   app: AppClassProperties,
 ) => {
-  console.log("[MATH DEBUG enableActionChangeMathProps] Starting check");
   const eligibleElements = getSelectedMathElements(elements, appState, app);
-  console.log("[MATH DEBUG enableActionChangeMathProps] eligibleElements:", eligibleElements.length);
 
   let enabled = false;
   eligibleElements.forEach((element) => {
-    console.log("[MATH DEBUG enableActionChangeMathProps] Checking element:", element.id);
     if (
       isMathElement(element) ||
       (hasBoundTextElement(element) &&
@@ -1469,7 +1421,6 @@ const enableActionChangeMathProps = (
         ))
     ) {
       enabled = true;
-      console.log("[MATH DEBUG enableActionChangeMathProps] Element is math, enabling");
     }
   });
 
@@ -1479,9 +1430,7 @@ const enableActionChangeMathProps = (
     appState.activeSubtypes.includes(mathSubtype)
   ) {
     enabled = true;
-    console.log("[MATH DEBUG enableActionChangeMathProps] Active tool is text with math subtype, enabling");
   }
-  console.log("[MATH DEBUG enableActionChangeMathProps] Final result:", enabled);
   return enabled;
 };
 
@@ -1587,7 +1536,6 @@ const createMathActions = () => {
     name: makeCustomActionName("changeMathOnly"),
     label: "labels.changeMathOnly",
     perform: (elements, appState, mathOnly: boolean | null, app) => {
-      console.log("[MATH DEBUG] changeMathOnly perform called, mathOnly:", mathOnly);
       if (mathOnly === null) {
         mathOnly = getFormValue(
           elements,
@@ -1613,15 +1561,10 @@ const createMathActions = () => {
         appState,
         (oldElement) => {
           if (isMathElement(oldElement)) {
-            console.log("[MATH DEBUG changeMathOnly] Processing element:", oldElement.id);
-            console.log("[MATH DEBUG changeMathOnly] Old customData:", oldElement.customData);
-            console.log("[MATH DEBUG changeMathOnly] Old dimensions:", {width: oldElement.width, height: oldElement.height});
-
             const customData = getMathProps.ensureMathProps({
               useTex: oldElement.customData?.useTex,
               mathOnly: mathOnly as boolean,
             });
-            console.log("[MATH DEBUG changeMathOnly] New customData:", customData);
 
             const newElement: ExcalidrawTextElement = newElementWith(
               oldElement,
@@ -1647,7 +1590,6 @@ const createMathActions = () => {
               return result;
             };
 
-            console.log("[MATH DEBUG changeMathOnly] Calling redrawTextBoundingBox with custom functions");
             redrawTextBoundingBox(
               newElement,
               getContainerElement(
@@ -1658,7 +1600,6 @@ const createMathActions = () => {
               customMeasureFn,
               customWrapFn,
             );
-            console.log("[MATH DEBUG changeMathOnly] After redraw dimensions:", {width: newElement.width, height: newElement.height});
             return newElement;
           }
 
@@ -1677,7 +1618,6 @@ const createMathActions = () => {
       };
     },
     PanelComponent: ({ elements, appState, updateData, app }) => {
-      console.log("[MATH DEBUG] changeMathOnly PanelComponent rendering");
       const value = getFormValue(
         elements,
         app,
@@ -1732,13 +1672,11 @@ const createMathActions = () => {
     },
     predicate: (elements, appState, _, app) => {
       const result = enableActionChangeMathProps(elements, appState, app);
-      console.log("[MATH DEBUG] changeMathOnly predicate:", result, "selected math elements:", getSelectedMathElements(elements, appState, app).length);
       return result;
     },
     trackEvent: false,
   };
   const actionMath = SubtypeButton(mathSubtype, "text", mathSubtypeIcon, "M");
-  console.log("[MATH DEBUG] Creating math actions - changeMathOnly:", actionChangeMathOnly.name);
   mathActions.push(actionUseTexTrue);
   mathActions.push(actionUseTexFalse);
   mathActions.push(actionResetUseTex);

@@ -171,12 +171,14 @@ export const SubtypeToggles = () => {
           height: "fit-content",
         }}
       >
-        {getSubtypeNames().map((subtype) =>
-          am.renderAction(
-            makeCustomActionName(subtype) as any,
-            hasAlwaysEnabledActions(subtype) ? { onContextMenu } : {},
-          ),
-        )}
+        {getSubtypeNames().map((subtype) => (
+          <React.Fragment key={subtype}>
+            {am.renderAction(
+              makeCustomActionName(subtype) as any,
+              hasAlwaysEnabledActions(subtype) ? { onContextMenu } : {},
+            )}
+          </React.Fragment>
+        ))}
       </Island>
     </>
   );
@@ -196,7 +198,11 @@ export const SubtypeShapeActions = (props: {
   );
   return (
     <>
-      {subtypeActions.map((action) => am.renderAction(action.name as any))}
+      {subtypeActions.map((action) => (
+        <React.Fragment key={action.name}>
+          {am.renderAction(action.name as any)}
+        </React.Fragment>
+      ))}
     </>
   );
 };

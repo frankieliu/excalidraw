@@ -170,6 +170,12 @@ export const handleBindTextResize = (
   scene: Scene,
   transformHandleType: MaybeTransformHandleType,
   shouldMaintainAspectRatio = false,
+  customMeasureFn?: (
+    text: string,
+    font: string,
+    lineHeight: number,
+  ) => { width: number; height: number },
+  customWrapFn?: (text: string, font: string, maxWidth: number) => string,
 ) => {
   const elementsMap = scene.getNonDeletedElementsMap();
   const boundTextElementId = getBoundTextElementId(container);
@@ -183,6 +189,10 @@ export const handleBindTextResize = (
       return;
     }
 
+    // Use custom functions if provided, otherwise use standard functions
+    const wrapTextFn = customWrapFn || wrapText;
+    const measureTextFn = customMeasureFn || measureText;
+
     let text = textElement.text;
     let nextHeight = textElement.height;
     let nextWidth = textElement.width;
@@ -194,13 +204,13 @@ export const handleBindTextResize = (
       (transformHandleType !== "n" && transformHandleType !== "s")
     ) {
       if (text) {
-        text = wrapText(
+        text = wrapTextFn(
           textElement.originalText,
           getFontString(textElement),
           maxWidth,
         );
       }
-      const metrics = measureText(
+      const metrics = measureTextFn(
         text,
         getFontString(textElement),
         textElement.lineHeight,
