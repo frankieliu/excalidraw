@@ -228,6 +228,12 @@ export const SelectedShapeActions = ({
         <>
           {renderAction("changeFontFamily")}
           {renderAction("changeFontSize")}
+          {(() => {
+            console.log("[MATH DEBUG] About to renderAction changeMathOnly");
+            const result = renderAction("changeMathOnly");
+            console.log("[MATH DEBUG] renderAction result:", result);
+            return result;
+          })()}
           {(appState.activeTool.type === "text" ||
             suppportsHorizontalAlign(targetElements, elementsMap)) &&
             renderAction("changeTextAlign")}
@@ -592,6 +598,9 @@ const CombinedTextProperties = ({
               {(appState.activeTool.type === "text" ||
                 targetElements.some(isTextElement)) &&
                 renderAction("changeFontSize")}
+              {(appState.activeTool.type === "text" ||
+                targetElements.some(isTextElement)) &&
+                renderAction("changeMathOnly")}
               {(appState.activeTool.type === "text" ||
                 suppportsHorizontalAlign(targetElements, elementsMap)) &&
                 renderAction("changeTextAlign")}

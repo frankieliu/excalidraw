@@ -19,6 +19,7 @@ import {
   Scene,
   getNonDeletedElements,
   getSelectedElements,
+  ShapeCache,
 } from "@excalidraw/element";
 import type {
   ExcalidrawElement,
@@ -36,7 +37,7 @@ import {
   changeProperty,
   getFormValue,
 } from "../../actions/actionProperties";
-// import { ButtonIconSelect } from "../../components/ButtonIconSelect"; // TODO: component doesn't exist in current branch
+import { RadioSelection } from "../../components/RadioSelection";
 
 // Subtype imports
 import type { SubtypeLoadedCb, SubtypeMethods, SubtypePrepFn } from "../";
@@ -56,11 +57,21 @@ type ExcalidrawMathElement = ExcalidrawTextElement &
 const isMathElement = (
   element: ExcalidrawElement | null,
 ): element is ExcalidrawMathElement => {
-  return (
-    isTextElement(element) &&
+  const result = isTextElement(element) &&
     "subtype" in element &&
-    element.subtype === mathSubtype
-  );
+    element.subtype === mathSubtype;
+  if (element) {
+    console.log("[MATH DEBUG isMathElement]", {
+      id: element.id,
+      type: element.type,
+      subtype: (element as any).subtype,
+      mathSubtype,
+      isTextElement: isTextElement(element),
+      hasSubtype: "subtype" in element,
+      result
+    });
+  }
+  return result;
 };
 
 class GetMathProps {
@@ -372,9 +383,13 @@ const consumeMathNewlines = (
     return text;
   }
   const tempText = splitMath(text.replace(/\r\n?/g, "\n"), mathProps);
+  // Only replace newlines in mixed mode (mathOnly: false) to preserve
+  // multiline math in math-only mode
   if (mathProps.useTex || !mathProps.mathOnly) {
     for (let i = 0; i < tempText.length; i++) {
-      if (i % 2 === 1 || mathProps.mathOnly) {
+      // Only replace newlines in math segments (odd indices), not in text segments
+      // This preserves newlines between separate math expressions like $x$\n$y$
+      if (i % 2 === 1) {
         tempText[i] = tempText[i].replace(/\n/g, " ");
       }
     }
@@ -770,7 +785,11 @@ const renderMath = (
   const mathLines = consumeMathNewlines(text, mathProps, isMathJaxLoaded).split(
     isMathJaxLoaded ? getMathNewline(mathProps) : "\n",
   );
+  console.log("[MULTILINE DEBUG] Original text:", text);
+  console.log("[MULTILINE DEBUG] After consumeMathNewlines:", consumeMathNewlines(text, mathProps, isMathJaxLoaded));
+  console.log("[MULTILINE DEBUG] mathLines:", mathLines);
   const { markup, aria } = markupText(text, mathProps, isMathJaxLoaded);
+  console.log("[MULTILINE DEBUG] markup:", markup);
   const metrics = getMetrics(
     markup,
     fontSize,
@@ -778,9 +797,11 @@ const renderMath = (
     mathProps,
     isMathJaxLoaded,
   );
+  console.log("[MULTILINE DEBUG] metrics:", metrics);
   const width = parentWidth ?? metrics.imageMetrics.width;
 
   let y = -1;
+  console.log("[MULTILINE DEBUG] Starting y position:", y);
   for (let index = 0; index < markup.length; index++) {
     const lineMetrics = metrics.lineMetrics[index];
     const lineMarkupMetrics = metrics.markupMetrics[index];
@@ -793,6 +814,7 @@ const renderMath = (
         : (width - lineMetrics.width + 1) / 2;
     // Drop any empty strings from this line to match childMetrics
     const content = markup[index].filter((value) => value !== "");
+    console.log(`[MULTILINE DEBUG] Line ${index}: y=${y}, lineMetrics=`, lineMetrics, "content=", content);
     for (let i = 0; i < content.length; i += 1) {
       const mjx = textAsMjxContainer(
         content[mathProps.mathOnly ? 0 : i],
@@ -813,10 +835,12 @@ const renderMath = (
       const childY = nullContent ? 0 : lineMarkupMetrics[i].y;
       const childWidth = nullContent ? 0 : lineMarkupMetrics[i].width;
       const childHeight = nullContent ? 0 : lineMarkupMetrics[i].height;
+      console.log(`[MULTILINE DEBUG]   Child ${i}: rendering at (${x + childX}, ${y + childY}) with size ${childWidth}x${childHeight}`);
       // Now render the child
       doRenderChild(x + childX, y + childY, childWidth, childHeight);
     }
     y += lineMetrics.height;
+    console.log(`[MULTILINE DEBUG]   After line ${index}, y=${y}`);
   }
   let ariaText = "";
   for (let i = 0; i < aria.length; i++) {
@@ -918,6 +942,13 @@ const getMathEditorStyle = function (element) {
 } as SubtypeMethods["getEditorStyle"];
 
 const measureMathElement = function (element, next) {
+  console.log("[MATH DEBUG measureMathElement] Called with:", {
+    elementId: element.id,
+    text: next?.text ?? element.text,
+    mathOnly: (next?.customData ?? element.customData)?.mathOnly,
+    oldDimensions: {width: element.width, height: element.height}
+  });
+
   ensureMathElement(element);
   const isMathJaxLoaded = mathJaxLoaded;
   if (!isMathJaxLoaded && isMathElement(element as ExcalidrawElement)) {
@@ -929,6 +960,8 @@ const measureMathElement = function (element, next) {
   const text = next?.text ?? element.text;
   const customData = next?.customData ?? element.customData;
   const mathProps = getMathProps.ensureMathProps(customData);
+  console.log("[MATH DEBUG measureMathElement] mathProps:", mathProps);
+
   const metrics = getImageMetrics(
     text,
     fontSize,
@@ -936,6 +969,7 @@ const measureMathElement = function (element, next) {
     mathProps,
     isMathJaxLoaded,
   );
+  console.log("[MATH DEBUG measureMathElement] Returning:", metrics);
   return metrics;
 } as SubtypeMethods["measureText"];
 
@@ -1394,10 +1428,13 @@ const enableActionChangeMathProps = (
   appState: AppState,
   app: AppClassProperties,
 ) => {
+  console.log("[MATH DEBUG enableActionChangeMathProps] Starting check");
   const eligibleElements = getSelectedMathElements(elements, appState, app);
+  console.log("[MATH DEBUG enableActionChangeMathProps] eligibleElements:", eligibleElements.length);
 
   let enabled = false;
   eligibleElements.forEach((element) => {
+    console.log("[MATH DEBUG enableActionChangeMathProps] Checking element:", element.id);
     if (
       isMathElement(element) ||
       (hasBoundTextElement(element) &&
@@ -1409,6 +1446,7 @@ const enableActionChangeMathProps = (
         ))
     ) {
       enabled = true;
+      console.log("[MATH DEBUG enableActionChangeMathProps] Element is math, enabling");
     }
   });
 
@@ -1418,7 +1456,9 @@ const enableActionChangeMathProps = (
     appState.activeSubtypes.includes(mathSubtype)
   ) {
     enabled = true;
+    console.log("[MATH DEBUG enableActionChangeMathProps] Active tool is text with math subtype, enabling");
   }
+  console.log("[MATH DEBUG enableActionChangeMathProps] Final result:", enabled);
   return enabled;
 };
 
@@ -1524,6 +1564,7 @@ const createMathActions = () => {
     name: makeCustomActionName("changeMathOnly"),
     label: "labels.changeMathOnly",
     perform: (elements, appState, mathOnly: boolean | null, app) => {
+      console.log("[MATH DEBUG] changeMathOnly perform called, mathOnly:", mathOnly);
       if (mathOnly === null) {
         mathOnly = getFormValue(
           elements,
@@ -1549,14 +1590,41 @@ const createMathActions = () => {
         appState,
         (oldElement) => {
           if (isMathElement(oldElement)) {
+            console.log("[MATH DEBUG changeMathOnly] Processing element:", oldElement.id);
+            console.log("[MATH DEBUG changeMathOnly] Old customData:", oldElement.customData);
+            console.log("[MATH DEBUG changeMathOnly] Old dimensions:", {width: oldElement.width, height: oldElement.height});
+
             const customData = getMathProps.ensureMathProps({
               useTex: oldElement.customData?.useTex,
               mathOnly: mathOnly as boolean,
             });
+            console.log("[MATH DEBUG changeMathOnly] New customData:", customData);
+
             const newElement: ExcalidrawTextElement = newElementWith(
               oldElement,
               { customData },
             );
+            // Clear shape cache to force remeasurement for both old and new
+            ShapeCache.delete(oldElement);
+            ShapeCache.delete(newElement);
+
+            // Create custom measurement functions that use the subtype's methods
+            const customMeasureFn = (text: string, font: string, lineHeight: number) => {
+              const result = measureMathElement(newElement, {
+                text,
+                customData,
+              });
+              return result;
+            };
+            const customWrapFn = (text: string, font: string, maxWidth: number) => {
+              const result = wrapMathElement(newElement, maxWidth, {
+                text,
+                customData,
+              });
+              return result;
+            };
+
+            console.log("[MATH DEBUG changeMathOnly] Calling redrawTextBoundingBox with custom functions");
             redrawTextBoundingBox(
               newElement,
               getContainerElement(
@@ -1564,7 +1632,10 @@ const createMathActions = () => {
                 app.scene.getElementsMapIncludingDeleted(),
               ),
               app.scene,
+              customMeasureFn,
+              customWrapFn,
             );
+            console.log("[MATH DEBUG changeMathOnly] After redraw dimensions:", {width: newElement.width, height: newElement.height});
             return newElement;
           }
 
@@ -1583,18 +1654,7 @@ const createMathActions = () => {
       };
     },
     PanelComponent: ({ elements, appState, updateData, app }) => {
-      const textIcon = (text: string, selected: boolean) => {
-        const color = selected
-          ? "var(--button-color, var(--color-primary-darker))"
-          : "var(--button-color, var(--text-primary-color))";
-        return (
-          <div className="buttonList">
-            <span style={{ textAlign: "center", fontSize: "0.6rem", color }}>
-              {text.replace(" ", "\n")}
-            </span>
-          </div>
-        );
-      };
+      console.log("[MATH DEBUG] changeMathOnly PanelComponent rendering");
       const value = getFormValue(
         elements,
         app,
@@ -1615,34 +1675,47 @@ const createMathActions = () => {
       return (
         <fieldset>
           <legend>{t("labels.changeMathOnly" as any)}</legend>
-          {/* TODO: ButtonIconSelect component doesn't exist in current branch
-          <ButtonIconSelect
-            group="mathOnly"
-            options={[
-              {
-                value: false,
-                text: t("labels.mathOnlyFalse"),
-                icon: textIcon(t("labels.mathOnlyFalse"), value === false),
-              },
-              {
-                value: true,
-                text: t("labels.mathOnlyTrue"),
-                icon: textIcon(t("labels.mathOnlyTrue"), value === true),
-              },
-            ]}
-            value={value}
-            onChange={(value) => updateData(value)}
-          />
-          */}
-          <div>Math Only: {value ? "Yes" : "No"}</div>
+          <div className="buttonList">
+            <RadioSelection
+              group="math-only"
+              options={[
+                {
+                  value: false,
+                  text: t("labels.mathOnlyFalse" as any),
+                  icon: (
+                    <div style={{ fontSize: "0.6rem", textAlign: "center" }}>
+                      {t("labels.mathOnlyFalse" as any)}
+                    </div>
+                  ),
+                  testId: "math-only-false",
+                },
+                {
+                  value: true,
+                  text: t("labels.mathOnlyTrue" as any),
+                  icon: (
+                    <div style={{ fontSize: "0.6rem", textAlign: "center" }}>
+                      {t("labels.mathOnlyTrue" as any)}
+                    </div>
+                  ),
+                  testId: "math-only-true",
+                },
+              ]}
+              value={value}
+              onChange={(newValue) => updateData(newValue)}
+            />
+          </div>
         </fieldset>
       );
     },
-    predicate: (elements, appState, _, app) =>
-      enableActionChangeMathProps(elements, appState, app),
+    predicate: (elements, appState, _, app) => {
+      const result = enableActionChangeMathProps(elements, appState, app);
+      console.log("[MATH DEBUG] changeMathOnly predicate:", result, "selected math elements:", getSelectedMathElements(elements, appState, app).length);
+      return result;
+    },
     trackEvent: false,
   };
   const actionMath = SubtypeButton(mathSubtype, "text", mathSubtypeIcon, "M");
+  console.log("[MATH DEBUG] Creating math actions - changeMathOnly:", actionChangeMathOnly.name);
   mathActions.push(actionUseTexTrue);
   mathActions.push(actionUseTexFalse);
   mathActions.push(actionResetUseTex);

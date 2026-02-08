@@ -36,7 +36,8 @@ export const SubtypeButton = (
     label: t(`toolBar.${subtype}` as any),
     trackEvent: false,
     predicate: (elements, appState, appProps, app) => {
-      return appState.activeSubtypes?.includes(subtype) ?? false;
+      // Always show the subtype button - the active state is handled by className
+      return true;
     },
     perform: (elements, appState) => {
       const inactive = !appState.activeSubtypes?.includes(subtype);
