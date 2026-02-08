@@ -350,20 +350,23 @@ const joinMath = (
   mathProps: MathProps,
   isMathJaxLoaded: boolean,
 ) => {
+  console.log("[MATH DEBUG joinMath] Input array:", text, "mathOnly:", mathProps.mathOnly);
   const startDelimiter = getStartDelimiter(mathProps.useTex, true);
   const endDelimiter = getEndDelimiter(mathProps.useTex, true);
   let inText = true;
   let joined = "";
   for (let index = 0; index < text.length; index++) {
     const space = index > 0 ? " " : "";
-    joined +=
-      mathProps.mathOnly && isMathJaxLoaded
+    const segment = mathProps.mathOnly && isMathJaxLoaded
         ? `${space}${text[index]}`
         : inText
         ? text[index]
         : startDelimiter + text[index] + endDelimiter;
+    console.log(`[MATH DEBUG joinMath] Index ${index} (inText=${inText}): "${text[index]}" -> "${segment}"`);
+    joined += segment;
     inText = !inText;
   }
+  console.log("[MATH DEBUG joinMath] Result:", joined);
   return joined;
 };
 
@@ -379,22 +382,33 @@ const consumeMathNewlines = (
   mathProps: MathProps,
   isMathJaxLoaded: boolean,
 ) => {
+  console.log("[MATH DEBUG consumeMathNewlines] Input:", { text, mathOnly: mathProps.mathOnly, useTex: mathProps.useTex });
   if (!isMathJaxLoaded) {
     return text;
   }
   const tempText = splitMath(text.replace(/\r\n?/g, "\n"), mathProps);
+  console.log("[MATH DEBUG consumeMathNewlines] After splitMath:", tempText);
   // Only replace newlines in mixed mode (mathOnly: false) to preserve
   // multiline math in math-only mode
   if (mathProps.useTex || !mathProps.mathOnly) {
+    console.log("[MATH DEBUG consumeMathNewlines] Replacing newlines in math segments");
     for (let i = 0; i < tempText.length; i++) {
       // Only replace newlines in math segments (odd indices), not in text segments
       // This preserves newlines between separate math expressions like $x$\n$y$
       if (i % 2 === 1) {
+        const before = tempText[i];
         tempText[i] = tempText[i].replace(/\n/g, " ");
+        if (before !== tempText[i]) {
+          console.log(`[MATH DEBUG consumeMathNewlines] Index ${i}: "${before}" -> "${tempText[i]}"`);
+        }
       }
     }
+  } else {
+    console.log("[MATH DEBUG consumeMathNewlines] NOT replacing newlines (AsciiMath mathOnly mode)");
   }
-  return joinMath(tempText, mathProps, isMathJaxLoaded);
+  const result = joinMath(tempText, mathProps, isMathJaxLoaded);
+  console.log("[MATH DEBUG consumeMathNewlines] After joinMath:", result);
+  return result;
 };
 
 // Cache the SVGs from MathJax
@@ -536,9 +550,12 @@ const markupText = (
   mathProps: MathProps,
   isMathJaxLoaded: boolean,
 ) => {
-  const lines = consumeMathNewlines(text, mathProps, isMathJaxLoaded).split(
-    isMathJaxLoaded ? getMathNewline(mathProps) : "\n",
-  );
+  console.log("[MATH DEBUG markupText] Input text:", text, "mathOnly:", mathProps.mathOnly);
+  const processedText = consumeMathNewlines(text, mathProps, isMathJaxLoaded);
+  const newlineSeparator = isMathJaxLoaded ? getMathNewline(mathProps) : "\n";
+  console.log("[MATH DEBUG markupText] After consumeMathNewlines:", processedText, "splitting by:", JSON.stringify(newlineSeparator));
+  const lines = processedText.split(newlineSeparator);
+  console.log("[MATH DEBUG markupText] Lines array:", lines);
   const markup = [] as Array<string>[];
   const aria = [] as Array<string>[];
   for (let index = 0; index < lines.length; index++) {
@@ -556,6 +573,7 @@ const markupText = (
       mathProps.mathOnly || !isMathJaxLoaded
         ? [lines[index]]
         : splitMath(lines[index], mathProps);
+    console.log(`[MATH DEBUG markupText] Line ${index} array (mathOnly=${mathProps.mathOnly}):`, lineArray);
     for (let i = 0; i < lineArray.length; i++) {
       // Don't guard the following as "isMathJaxLoaded && i % 2 === 1"
       // in order to ensure math2Svg() actually gets called, and thus
@@ -575,6 +593,7 @@ const markupText = (
       aria[index].push("");
     }
   }
+  console.log("[MATH DEBUG markupText] Final markup:", markup.length, "lines");
   return { markup, aria };
 };
 
@@ -862,8 +881,10 @@ const getImageMetrics = (
   isMathJaxLoaded: boolean,
   maxWidth?: number | null,
 ) => {
+  console.log("[MATH DEBUG getImageMetrics] Input:", { text, mathOnly: mathProps.mathOnly, maxWidth });
   const markup = markupText(text, mathProps, isMathJaxLoaded).markup;
-  return getMetrics(
+  console.log("[MATH DEBUG getImageMetrics] Markup lines:", markup.length, "content:", markup);
+  const metrics = getMetrics(
     markup,
     fontSize,
     lineHeight,
@@ -871,6 +892,8 @@ const getImageMetrics = (
     isMathJaxLoaded,
     maxWidth,
   ).imageMetrics;
+  console.log("[MATH DEBUG getImageMetrics] Result metrics:", metrics);
+  return metrics;
 };
 
 const getSelectedMathElements = (
