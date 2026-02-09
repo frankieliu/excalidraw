@@ -132,7 +132,7 @@ The button appears in the Stats panel (Properties sidebar) under the "Text Tools
 
 ### Opening the Stats Panel
 
-1. Click the "Properties" button in the toolbar (or press `Ctrl/Cmd + /`)
+1. Click the "Properties" button in the toolbar (or press `Ctrl + /` on Windows/Linux, `Option + /` on Mac)
 2. The Stats panel appears on the right side
 
 ### Refreshing Text Bounds
