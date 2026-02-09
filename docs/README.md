@@ -59,6 +59,7 @@ Development environment setup and workflows.
 **Setup Guides:**
 - [DEV_SETUP.md](./development/DEV_SETUP.md) - Development environment setup
 - [DEV_ENV_FIXES.md](./development/DEV_ENV_FIXES.md) - Common environment issues and fixes
+- [PORT_CONFIGURATION.md](./development/PORT_CONFIGURATION.md) - Configure development server port
 
 **Git Workflow:**
 - [FORK_AND_PUSH.md](./development/FORK_AND_PUSH.md) - Fork management and pushing changes
@@ -96,11 +97,11 @@ Feature analysis and research documentation.
 
 ## 📊 Documentation Statistics
 
-- **Total Documents**: 25 files
+- **Total Documents**: 26 files
 - **MathJax Documentation**: 13 files
 - **SVG Import Documentation**: 4 files
 - **UI Improvements Documentation**: 1 file
-- **Development Guides**: 3 files
+- **Development Guides**: 4 files
 - **Analysis Documents**: 2 files
 
 ---
