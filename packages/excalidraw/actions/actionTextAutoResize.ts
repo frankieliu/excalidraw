@@ -1,9 +1,13 @@
 import { getFontString } from "@excalidraw/common";
 
 import { newElementWith } from "@excalidraw/element";
-import { measureText } from "@excalidraw/element";
+import { measureText, redrawTextBoundingBox } from "@excalidraw/element";
 
-import { isTextElement } from "@excalidraw/element";
+import {
+  isTextElement,
+  hasBoundTextElement,
+  getBoundTextElement,
+} from "@excalidraw/element";
 
 import { CaptureUpdateAction } from "@excalidraw/element";
 
@@ -48,6 +52,47 @@ export const actionTextAutoResize = register({
         }
         return element;
       }),
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    };
+  },
+});
+
+export const actionRefreshTextBounds = register({
+  name: "refreshTextBounds",
+  label: "labels.refreshTextBounds",
+  icon: null,
+  trackEvent: { category: "element" },
+  predicate: (_elements, appState, _props, app) => {
+    // Only show when there are text elements in the scene
+    const elements = app.scene.getNonDeletedElements();
+    return elements.some(
+      (el) => isTextElement(el) || hasBoundTextElement(el),
+    );
+  },
+  perform: (_elements, appState, _, app) => {
+    const scene = app.scene;
+    const elements = scene.getNonDeletedElements();
+    const elementsMap = scene.getNonDeletedElementsMap();
+
+    // Refresh all text elements and text within containers
+    elements.forEach((element) => {
+      if (isTextElement(element)) {
+        // Standalone text element
+        const container = element.containerId
+          ? elementsMap.get(element.containerId)
+          : null;
+        redrawTextBoundingBox(element, container || null, scene);
+      } else if (hasBoundTextElement(element)) {
+        // Container with text
+        const boundText = getBoundTextElement(element, elementsMap);
+        if (boundText) {
+          redrawTextBoundingBox(boundText, element, scene);
+        }
+      }
+    });
+
+    return {
+      appState,
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     };
   },

@@ -16,9 +16,14 @@ import type { NonDeletedExcalidrawElement } from "@excalidraw/element/types";
 
 import { t } from "../../i18n";
 import { isGridModeEnabled } from "../../snapping";
-import { useExcalidrawAppState, useExcalidrawSetAppState } from "../App";
+import {
+  useExcalidrawAppState,
+  useExcalidrawSetAppState,
+  useExcalidrawActionManager,
+} from "../App";
 import { Island } from "../Island";
 import { CloseIcon } from "../icons";
+import { actionRefreshTextBounds } from "../../actions";
 
 import Angle from "./Angle";
 import CanvasGrid from "./CanvasGrid";
@@ -131,6 +136,7 @@ export const StatsInner = memo(
     const elements = scene.getNonDeletedElements();
     const elementsMap = scene.getNonDeletedElementsMap();
     const setAppState = useExcalidrawSetAppState();
+    const actionManager = useExcalidrawActionManager();
 
     const singleElement =
       selectedElements.length === 1 ? selectedElements[0] : null;
@@ -230,6 +236,25 @@ export const StatsInner = memo(
                       appState={appState}
                       setAppState={setAppState}
                     />
+                  </StatsRow>
+                </>
+              )}
+              {actionManager.isActionEnabled(actionRefreshTextBounds) && (
+                <>
+                  <StatsRow heading>{t("stats.textTools")}</StatsRow>
+                  <StatsRow>
+                    <button
+                      className="exc-button exc-button--outlined"
+                      onClick={() => {
+                        actionManager.executeAction(actionRefreshTextBounds);
+                      }}
+                      style={{
+                        width: "100%",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      {t("labels.refreshTextBounds")}
+                    </button>
                   </StatsRow>
                 </>
               )}
