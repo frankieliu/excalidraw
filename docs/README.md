@@ -45,6 +45,14 @@ Documentation for SVG file import functionality.
 
 ---
 
+### 🎯 [UI Improvements](./ui-improvements/)
+User interface and file handling improvements.
+
+**Feature Documentation:**
+- [FILE_HANDLING_IMPROVEMENTS.md](./ui-improvements/FILE_HANDLING_IMPROVEMENTS.md) - File handle preservation and tab title updates
+
+---
+
 ### 🛠️ [Development](./development/)
 Development environment setup and workflows.
 
@@ -81,13 +89,17 @@ Feature analysis and research documentation.
 1. Read [SVG Quick Start](./svg-import/QUICKSTART_SVG.md)
 2. Review [SVG Feature Documentation](./svg-import/SVG_IMPORT_FEATURE.md)
 
+### To Learn About Recent UI Improvements:
+1. Review [File Handling Improvements](./ui-improvements/FILE_HANDLING_IMPROVEMENTS.md)
+
 ---
 
 ## 📊 Documentation Statistics
 
-- **Total Documents**: 23 files
+- **Total Documents**: 25 files
 - **MathJax Documentation**: 13 files
 - **SVG Import Documentation**: 4 files
+- **UI Improvements Documentation**: 1 file
 - **Development Guides**: 3 files
 - **Analysis Documents**: 2 files
 
@@ -112,4 +124,4 @@ git log --oneline -- docs/
 
 ---
 
-**Last Updated**: 2026-02-08
+**Last Updated**: 2026-02-09

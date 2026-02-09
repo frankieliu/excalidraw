@@ -469,6 +469,9 @@ export const normalizeFile = async (file: File) => {
     return file;
   }
 
+  // Preserve the file handle if it exists (from File System Access API)
+  const originalHandle = (file as any).handle;
+
   if (file?.name?.endsWith(".excalidrawlib")) {
     file = createFile(file, MIME_TYPES.excalidrawlib, file.name);
   } else if (file?.name?.endsWith(".excalidraw")) {
@@ -481,6 +484,11 @@ export const normalizeFile = async (file: File) => {
     if (mimeType && mimeType !== file.type) {
       file = createFile(file, mimeType, file.name);
     }
+  }
+
+  // Restore the file handle after creating a new File object
+  if (originalHandle) {
+    (file as any).handle = originalHandle;
   }
 
   (file as any)[normalizedFileSymbol] = true;

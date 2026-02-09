@@ -659,11 +659,44 @@ const ExcalidrawWrapper = () => {
     };
   }, [excalidrawAPI]);
 
+  // Update document title when a file is opened or saved
+  useEffect(() => {
+    if (!excalidrawAPI) {
+      return;
+    }
+
+    const updateDocumentTitle = () => {
+      const appState = excalidrawAPI.getAppState();
+      const fileHandle = appState.fileHandle;
+
+      if (fileHandle && fileHandle.name) {
+        // Remove .excalidraw extension and set title
+        const filename = fileHandle.name.replace(/\.excalidraw$/, "");
+        document.title = `Excalidraw: ${filename}`;
+      } else {
+        // Reset to default title if no file is open
+        document.title = "Excalidraw Whiteboard";
+      }
+    };
+
+    // Update immediately when excalidrawAPI becomes available
+    updateDocumentTitle();
+  }, [excalidrawAPI]);
+
   const onChange = (
     elements: readonly OrderedExcalidrawElement[],
     appState: AppState,
     files: BinaryFiles,
   ) => {
+    // Update document title when appState changes
+    const fileHandle = appState.fileHandle;
+    if (fileHandle && fileHandle.name) {
+      const filename = fileHandle.name.replace(/\.excalidraw$/, "");
+      document.title = `Excalidraw: ${filename}`;
+    } else if (!document.title.includes("Excalidraw Whiteboard")) {
+      document.title = "Excalidraw Whiteboard";
+    }
+
     if (collabAPI?.isCollaborating()) {
       collabAPI.syncElements(elements);
     }
