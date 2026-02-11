@@ -444,8 +444,10 @@ export class FileHandleStorage {
     handle: FileSystemFileHandle,
   ): Promise<{ granted: boolean; error?: Error }> {
     // This will request permission if needed (requires user activation like clicking "Save")
-    const verification =
-      await FileHandleStorage.verifyHandlePermission(handle, true);
+    const verification = await FileHandleStorage.verifyHandlePermission(
+      handle,
+      true,
+    );
 
     if (verification.granted) {
       return { granted: true };
