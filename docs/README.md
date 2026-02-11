@@ -77,6 +77,10 @@ Development environment setup and workflows.
 - [PORT_CONFIGURATION.md](./development/PORT_CONFIGURATION.md) - Configure development server port
 - [KEYBOARD_SHORTCUTS.md](./development/KEYBOARD_SHORTCUTS.md) - Keyboard shortcuts reference
 
+**Architecture:**
+
+- [STORAGE_ARCHITECTURE.md](./development/STORAGE_ARCHITECTURE.md) - localStorage vs IndexedDB usage
+
 **Git Workflow:**
 
 - [FORK_AND_PUSH.md](./development/FORK_AND_PUSH.md) - Fork management and pushing changes
@@ -119,11 +123,11 @@ Feature analysis and research documentation.
 
 ## 📊 Documentation Statistics
 
-- **Total Documents**: 29 files
+- **Total Documents**: 30 files
 - **MathJax Documentation**: 13 files
 - **SVG Import Documentation**: 4 files
 - **UI Improvements Documentation**: 3 files
-- **Development Guides**: 5 files
+- **Development Guides**: 6 files
 - **Analysis Documents**: 2 files
 
 ---
@@ -149,4 +153,4 @@ git log --oneline -- docs/
 
 ---
 
-**Last Updated**: 2026-02-10
+**Last Updated**: 2026-02-11

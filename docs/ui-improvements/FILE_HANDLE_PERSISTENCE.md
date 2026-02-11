@@ -1,6 +1,6 @@
 # File Handle Persistence Across Page Reloads
 
-**Date**: 2026-02-10 **Status**: 📋 Proposed **Related**: [FILE_HANDLING_IMPROVEMENTS.md](./FILE_HANDLING_IMPROVEMENTS.md)
+**Date**: 2026-02-10 **Status**: ✅ Implemented (2026-02-11) **Related**: [FILE_HANDLING_IMPROVEMENTS.md](./FILE_HANDLING_IMPROVEMENTS.md)
 
 ## Problem Statement
 
@@ -316,41 +316,55 @@ User experience: Same as current behavior
 
 ## Implementation Plan
 
-### Phase 1: Core Storage Layer
+### Phase 1: Core Storage Layer ✅
 
-- [ ] Create `FileHandleStorage` class in `LocalData.ts`
-- [ ] Add IndexedDB database initialization
-- [ ] Implement `saveHandle()`, `getHandle()`, `clearHandle()` methods
-- [ ] Add error handling and fallbacks
+- [x] Create `FileHandleStorage` class in `LocalData.ts`
+- [x] Add IndexedDB database initialization (using `idb-keyval`)
+- [x] Implement `saveHandle()`, `getHandle()`, `clearHandle()` methods
+- [x] Add error handling and fallbacks
 
-### Phase 2: Integration with File Operations
+### Phase 2: Integration with File Operations ✅
 
-- [ ] Hook into file open operations (in `FileManager.tsx` or `filesystem.ts`)
-- [ ] Hook into file save operations
-- [ ] Add handle clearing for "New Drawing" action
-- [ ] Update relevant action handlers
+- [x] Hook into file operations via `onChange()` in `App.tsx`
+- [x] Save handle when `appState.fileHandle` changes
+- [x] Clear handle when file is closed
 
-### Phase 3: Page Load Restoration
+### Phase 3: Page Load Restoration ✅
 
-- [ ] Add restoration logic to app initialization (`App.tsx`)
-- [ ] Implement permission request flow
-- [ ] Handle permission denied cases gracefully
-- [ ] Add error logging for debugging
+- [x] Add restoration logic to `initializeScene()` in `App.tsx`
+- [x] Restore filename and handle from IndexedDB
+- [x] Defer permission request until save (user activation required)
+- [x] Add console logging for debugging
 
 ### Phase 4: Testing & Polish
 
-- [ ] Test with various permission scenarios
-- [ ] Test file deletion/move edge cases
+- [x] Test reload scenarios
+- [x] Test browser close/reopen scenarios
 - [ ] Test browser compatibility (Chrome, Edge, Safari)
 - [ ] Add telemetry for restoration success/failure rates
-- [ ] Update documentation
 
-### Phase 5: User Experience Enhancements
+### Phase 5: User Experience Enhancements (Future)
 
 - [ ] Show permission prompt explanation (optional)
 - [ ] Add "Reconnect to file" button if permission denied
 - [ ] Show notification when file handle restored
 - [ ] Add unsaved changes indicator in tab title
+
+## Implementation Summary
+
+The feature was implemented with a simplified approach:
+
+1. **Storage**: Uses `idb-keyval` library (already used by Excalidraw) to store file handles in IndexedDB
+2. **Saving**: The `onChange()` handler in `App.tsx` tracks `appState.fileHandle` changes and saves to IndexedDB
+3. **Restoration**: `initializeScene()` restores the handle and filename on page load
+4. **Permissions**: Deferred to save time - when user clicks Save, the browser prompts for permission
+
+**Key Files Modified:**
+- `excalidraw-app/data/LocalData.ts` - Added `FileHandleStorage` class
+- `excalidraw-app/App.tsx` - Added save/restore hooks
+
+**Related Documentation:**
+- [Storage Architecture](../development/STORAGE_ARCHITECTURE.md) - Explains localStorage vs IndexedDB usage
 
 ## Key Files to Modify
 
@@ -472,11 +486,13 @@ After implementation, measure:
 
 - [FILE_HANDLING_IMPROVEMENTS.md](./FILE_HANDLING_IMPROVEMENTS.md) - Current file handle implementation
 - [Session State Analysis](../analysis/SESSION_STATE.md) - App state persistence mechanisms
+- [Storage Architecture](../development/STORAGE_ARCHITECTURE.md) - localStorage vs IndexedDB comparison
 
 ---
 
-**Next Steps**: Review proposal → Get approval → Begin Phase 1 implementation
+**Implementation Complete**: 2026-02-11
 
-**Estimated Effort**: 2-3 days for core implementation + testing
-
-**Priority**: Medium-High (addresses known user pain point)
+**Commits**:
+- `07d813d3` - docs: add file handle persistence proposal
+- `4a8b8f7d` - feat: implement file handle persistence across page reloads
+- `31ab5173` - refactor: simplify file handle persistence approach
