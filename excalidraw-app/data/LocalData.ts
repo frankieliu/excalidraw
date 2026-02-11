@@ -287,7 +287,7 @@ export class FileHandleStorage {
   private static readonly CURRENT_FILE_KEY = "current-file";
 
   /**
-   * Save a file handle to IndexedDB
+   * Save a file handle to IndexedDB along with metadata
    * @param handle - The FileSystemFileHandle to persist
    * @returns Promise that resolves when saved
    */
@@ -295,7 +295,13 @@ export class FileHandleStorage {
     handle: FileSystemFileHandle,
   ): Promise<{ success: boolean; error?: Error }> {
     try {
-      await set(FileHandleStorage.CURRENT_FILE_KEY, handle, fileHandleStore);
+      // Store handle with metadata for better UX
+      const entry = {
+        handle,
+        savedAt: Date.now(),
+        fileName: handle.name,
+      };
+      await set(FileHandleStorage.CURRENT_FILE_KEY, entry, fileHandleStore);
       return { success: true };
     } catch (error) {
       console.error("Failed to save file handle:", error);
@@ -310,16 +316,30 @@ export class FileHandleStorage {
    * Retrieve the saved file handle from IndexedDB
    * @returns Promise that resolves to the FileSystemFileHandle or null
    */
-  static async getHandle(): Promise<FileSystemFileHandle | null> {
+  static async getHandle(): Promise<{
+    handle: FileSystemFileHandle | null;
+    fileName?: string;
+    savedAt?: number;
+  }> {
     try {
-      const handle = await get<FileSystemFileHandle>(
-        FileHandleStorage.CURRENT_FILE_KEY,
-        fileHandleStore,
-      );
-      return handle || null;
+      const entry = await get<{
+        handle: FileSystemFileHandle;
+        fileName: string;
+        savedAt: number;
+      }>(FileHandleStorage.CURRENT_FILE_KEY, fileHandleStore);
+
+      if (!entry) {
+        return { handle: null };
+      }
+
+      return {
+        handle: entry.handle,
+        fileName: entry.fileName,
+        savedAt: entry.savedAt,
+      };
     } catch (error) {
       console.warn("Failed to retrieve file handle:", error);
-      return null;
+      return { handle: null };
     }
   }
 
@@ -404,17 +424,19 @@ export class FileHandleStorage {
   /**
    * Restore file handle from storage and verify permissions
    * Only restores handles with "granted" permission on page load
+   * Keeps handle in storage if permission is "prompt" for later restoration
    * @returns Promise that resolves to verified handle or null
    */
   static async restoreHandle(): Promise<{
     handle: FileSystemFileHandle | null;
     granted: boolean;
-    needsCleanup: boolean;
+    fileName?: string;
+    needsPermission: boolean;
   }> {
-    const handle = await FileHandleStorage.getHandle();
+    const { handle, fileName } = await FileHandleStorage.getHandle();
 
     if (!handle) {
-      return { handle: null, granted: false, needsCleanup: false };
+      return { handle: null, granted: false, needsPermission: false };
     }
 
     // Only query permission, don't request (page load = no user activation)
@@ -423,21 +445,53 @@ export class FileHandleStorage {
 
     if (verification.permission === "granted") {
       // Permission already granted - can use the handle
-      return { handle, granted: true, needsCleanup: false };
+      return { handle, granted: true, fileName, needsPermission: false };
     }
 
     if (verification.permission === "denied") {
       // Permission explicitly denied - clear stale handle
       await FileHandleStorage.clearHandle();
-      return { handle: null, granted: false, needsCleanup: true };
+      return { handle: null, granted: false, needsPermission: false };
     }
 
-    // Permission is "prompt" - can't restore without user activation
-    // User will need to reopen the file
+    // Permission is "prompt" - keep handle for later restoration
+    // Return info so UI can show a restore button
     console.info(
-      "File handle found but permission needs to be re-granted. Please reopen the file.",
+      `File handle for "${fileName}" needs permission. User can restore with a click.`,
     );
-    await FileHandleStorage.clearHandle();
-    return { handle: null, granted: false, needsCleanup: true };
+    return { handle, granted: false, fileName, needsPermission: true };
+  }
+
+  /**
+   * Request permission and restore a file handle (requires user activation)
+   * Call this in response to a user click/interaction
+   * @param handle - The file handle to restore
+   * @returns Promise that resolves when permission is granted or denied
+   */
+  static async restoreHandleWithPermission(
+    handle: FileSystemFileHandle,
+  ): Promise<{ granted: boolean; error?: Error }> {
+    // This will request permission (requires user activation)
+    const verification =
+      await FileHandleStorage.verifyHandlePermission(handle, true);
+
+    if (verification.granted) {
+      console.info("File handle permission granted");
+      return { granted: true };
+    }
+
+    if (verification.permission === "denied") {
+      // User denied - clear the handle
+      await FileHandleStorage.clearHandle();
+      return {
+        granted: false,
+        error: new Error("Permission denied by user"),
+      };
+    }
+
+    return {
+      granted: false,
+      error: verification.error || new Error("Failed to get permission"),
+    };
   }
 }

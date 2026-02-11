@@ -254,7 +254,7 @@ const initializeScene = async (opts: {
   );
   if (!isExternalSceneCheck && scene.appState) {
     try {
-      const { handle, granted, needsCleanup } =
+      const { handle, granted, fileName, needsPermission } =
         await FileHandleStorage.restoreHandle();
 
       if (granted && handle) {
@@ -263,12 +263,26 @@ const initializeScene = async (opts: {
           ...scene.appState,
           fileHandle: handle as any, // Type cast needed due to FileSystemFileHandle/FileSystemHandle mismatch
         };
-        console.info("File handle restored from IndexedDB");
-      } else if (needsCleanup) {
-        // Permission denied or file no longer exists - handle was cleared
+        console.info(`File handle restored: ${fileName}`);
+      } else if (needsPermission && handle && fileName) {
+        // Permission needed - try to restore it (will prompt user)
         console.info(
-          "Stored file handle was invalid and has been removed from storage",
+          `Requesting permission to restore file: ${fileName}. Browser will show permission dialog.`,
         );
+        const { granted: permissionGranted } =
+          await FileHandleStorage.restoreHandleWithPermission(handle);
+
+        if (permissionGranted) {
+          scene.appState = {
+            ...scene.appState,
+            fileHandle: handle as any,
+          };
+          console.info(`File handle restored after permission grant: ${fileName}`);
+        } else {
+          console.warn(
+            `Permission denied for file: ${fileName}. User needs to reopen the file.`,
+          );
+        }
       }
     } catch (error) {
       console.warn("Failed to restore file handle on page load:", error);
