@@ -309,7 +309,7 @@ export const actionCenterToOrigin = register({
 
     // Collect all arrows that are bound to target elements
     // These arrows should move along with the elements
-    const boundArrowIds = new Set<string>();
+    const boundArrows: ExcalidrawElement[] = [];
     for (const element of targetElements) {
       if (element.boundElements) {
         for (const bound of element.boundElements) {
@@ -318,20 +318,12 @@ export const actionCenterToOrigin = register({
             if (arrow && isArrowElement(arrow)) {
               // Include arrow if it's not already a target element
               if (!targetElementIds.has(arrow.id)) {
-                boundArrowIds.add(arrow.id);
+                boundArrows.push(arrow);
+                targetElementIds.add(arrow.id); // Avoid duplicates
               }
             }
           }
         }
-      }
-    }
-
-    // Combine target elements with bound arrows
-    const allElementsToMove: ExcalidrawElement[] = [...targetElements];
-    for (const arrowId of boundArrowIds) {
-      const arrow = elementsMap.get(arrowId);
-      if (arrow) {
-        allElementsToMove.push(arrow);
       }
     }
 
@@ -342,15 +334,18 @@ export const actionCenterToOrigin = register({
     const translateX = -boundingBox.midX;
     const translateY = -boundingBox.midY;
 
-    // Get groups to handle bound elements correctly
+    // All elements that will be moved (for simultaneouslyUpdated)
+    const allElementsToMove = [...targetElements, ...boundArrows];
+
+    // Get groups for the original target elements only
     const groups: ExcalidrawElement[][] = getSelectedElementsByGroup(
-      allElementsToMove,
+      targetElements,
       elementsMap,
       appState,
     );
 
-    // Translate all elements (including bound arrows)
-    const updatedElements = groups.flatMap((group) => {
+    // Translate target elements through group logic
+    const updatedTargetElements = groups.flatMap((group) => {
       return group.map((element) => {
         const updatedEle = app.scene.mutateElement(element, {
           x: element.x + translateX,
@@ -366,7 +361,18 @@ export const actionCenterToOrigin = register({
       });
     });
 
-    const updatedElementsMap = arrayToMap(updatedElements);
+    // Translate bound arrows directly (they don't go through group logic)
+    const updatedArrows = boundArrows.map((arrow) => {
+      return app.scene.mutateElement(arrow, {
+        x: arrow.x + translateX,
+        y: arrow.y + translateY,
+      });
+    });
+
+    const updatedElementsMap = arrayToMap([
+      ...updatedTargetElements,
+      ...updatedArrows,
+    ]);
 
     return {
       elements: updateFrameMembershipOfSelectedElements(

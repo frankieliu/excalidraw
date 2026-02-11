@@ -71,10 +71,11 @@ export const actionCenterToOrigin = register({
   },
   perform: (elements, appState, _, app) => {
     // 1. Get target elements (selected or all)
-    // 2. Collect bound arrows
-    // 3. Calculate bounding box center
-    // 4. Translate all elements by -midX, -midY
-    // 5. Update bound elements
+    // 2. Collect bound arrows separately
+    // 3. Calculate bounding box center of target elements
+    // 4. Translate target elements through group logic
+    // 5. Translate bound arrows directly (separate from grouping)
+    // 6. Update bound elements
   },
 });
 ```
@@ -84,9 +85,13 @@ export const actionCenterToOrigin = register({
 A key feature is that arrows connected to the moving elements also move:
 
 1. For each target element, we check its `boundElements` array
-2. If a bound element is an arrow (type === "arrow"), we include it in the elements to move
-3. This ensures "dangling" arrows (connected on one end, free on the other) move correctly
-4. The behavior matches the standard drag behavior
+2. If a bound element is an arrow (type === "arrow"), we collect it separately
+3. Target elements are processed through `getSelectedElementsByGroup` for proper group handling
+4. Bound arrows are moved directly without grouping logic (they aren't in the selection state)
+5. This ensures "dangling" arrows (connected on one end, free on the other) move correctly
+6. The behavior matches the standard drag behavior
+
+**Important**: Arrows are handled separately from the main grouping logic because `getSelectedElementsByGroup` relies on `appState.selectedElementIds`, and the arrows we're adding aren't actually selected - they're just bound to selected elements.
 
 ## Technical Notes
 
