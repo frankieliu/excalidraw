@@ -1,6 +1,6 @@
 import { getNonDeletedElements } from "@excalidraw/element";
 
-import { isFrameLikeElement } from "@excalidraw/element";
+import { isFrameLikeElement, isArrowElement } from "@excalidraw/element";
 
 import { updateFrameMembershipOfSelectedElements } from "@excalidraw/element";
 
@@ -12,7 +12,15 @@ import { CaptureUpdateAction } from "@excalidraw/element";
 
 import { getSelectedElementsByGroup } from "@excalidraw/element";
 
-import type { ExcalidrawElement } from "@excalidraw/element/types";
+import {
+  getCommonBoundingBox,
+  updateBoundElements,
+} from "@excalidraw/element";
+
+import type {
+  ExcalidrawElement,
+  ElementsMap,
+} from "@excalidraw/element/types";
 
 import type { Alignment } from "@excalidraw/element";
 
@@ -270,4 +278,106 @@ export const actionAlignHorizontallyCentered = register({
       visible={isSomeElementSelected(getNonDeletedElements(elements), appState)}
     />
   ),
+});
+
+/**
+ * Centers selected elements (or all elements if none selected) to the canvas origin (0,0).
+ * Preserves relative positions between elements - they move as a group.
+ * Also moves bound arrows so they stay connected and move with the elements.
+ */
+export const actionCenterToOrigin = register({
+  name: "centerToOrigin",
+  label: "labels.centerToOrigin",
+  trackEvent: { category: "element" },
+  predicate: (elements, _appState, _appProps, app) => {
+    // Available when there are elements in the scene (works with or without selection)
+    return getNonDeletedElements(elements).length > 0;
+  },
+  perform: (elements, appState, _, app) => {
+    const selectedElements = app.scene.getSelectedElements(appState);
+    const targetElements =
+      selectedElements.length > 0
+        ? selectedElements
+        : getNonDeletedElements(elements);
+
+    if (targetElements.length === 0) {
+      return { elements, appState, captureUpdate: CaptureUpdateAction.NEVER };
+    }
+
+    const elementsMap: ElementsMap = app.scene.getNonDeletedElementsMap();
+    const targetElementIds = new Set(targetElements.map((el) => el.id));
+
+    // Collect all arrows that are bound to target elements
+    // These arrows should move along with the elements
+    const boundArrowIds = new Set<string>();
+    for (const element of targetElements) {
+      if (element.boundElements) {
+        for (const bound of element.boundElements) {
+          if (bound.type === "arrow") {
+            const arrow = elementsMap.get(bound.id);
+            if (arrow && isArrowElement(arrow)) {
+              // Include arrow if it's not already a target element
+              if (!targetElementIds.has(arrow.id)) {
+                boundArrowIds.add(arrow.id);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Combine target elements with bound arrows
+    const allElementsToMove: ExcalidrawElement[] = [...targetElements];
+    for (const arrowId of boundArrowIds) {
+      const arrow = elementsMap.get(arrowId);
+      if (arrow) {
+        allElementsToMove.push(arrow);
+      }
+    }
+
+    // Calculate bounding box of original target elements (not including arrows we're adding)
+    const boundingBox = getCommonBoundingBox(targetElements);
+
+    // Calculate translation to move center to origin (0,0)
+    const translateX = -boundingBox.midX;
+    const translateY = -boundingBox.midY;
+
+    // Get groups to handle bound elements correctly
+    const groups: ExcalidrawElement[][] = getSelectedElementsByGroup(
+      allElementsToMove,
+      elementsMap,
+      appState,
+    );
+
+    // Translate all elements (including bound arrows)
+    const updatedElements = groups.flatMap((group) => {
+      return group.map((element) => {
+        const updatedEle = app.scene.mutateElement(element, {
+          x: element.x + translateX,
+          y: element.y + translateY,
+        });
+
+        // Update bound elements (for text labels etc.)
+        updateBoundElements(element, app.scene, {
+          simultaneouslyUpdated: allElementsToMove,
+        });
+
+        return updatedEle;
+      });
+    });
+
+    const updatedElementsMap = arrayToMap(updatedElements);
+
+    return {
+      elements: updateFrameMembershipOfSelectedElements(
+        elements.map(
+          (element) => updatedElementsMap.get(element.id) || element,
+        ),
+        appState,
+        app,
+      ),
+      appState,
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    };
+  },
 });

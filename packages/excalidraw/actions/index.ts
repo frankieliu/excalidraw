@@ -62,6 +62,7 @@ export {
   actionAlignRight,
   actionAlignVerticallyCentered,
   actionAlignHorizontallyCentered,
+  actionCenterToOrigin,
 } from "./actionAlign";
 
 export {
