@@ -1,7 +1,10 @@
 // Some imports
-import fallbackMathJaxLangData from "./locales/en.json";
 import { FONT_FAMILY, SVG_NS } from "@excalidraw/common/constants";
-import { getFontString, getFontFamilyString, isRTL } from "@excalidraw/common/utils";
+import {
+  getFontString,
+  getFontFamilyString,
+  isRTL,
+} from "@excalidraw/common/utils";
 import { getLineHeight } from "@excalidraw/common";
 import {
   getBoundTextElement,
@@ -21,6 +24,7 @@ import {
   getSelectedElements,
   ShapeCache,
 } from "@excalidraw/element";
+
 import type {
   ExcalidrawElement,
   ExcalidrawTextElement,
@@ -28,22 +32,24 @@ import type {
 } from "@excalidraw/element/types";
 
 // Imports for actions
-import type { LangLdr } from "../../i18n";
 import { registerCustomLangData, t } from "../../i18n";
-import type { Action } from "../../actions/types";
+
 import { makeCustomActionName } from "../../actions/types";
-import type { AppClassProperties, AppState } from "../../types";
-import {
-  changeProperty,
-  getFormValue,
-} from "../../actions/actionProperties";
+
+import { changeProperty, getFormValue } from "../../actions/actionProperties";
 import { RadioSelection } from "../../components/RadioSelection";
 
 // Subtype imports
-import type { SubtypeLoadedCb, SubtypeMethods, SubtypePrepFn } from "../";
+import { SubtypeButton } from "../../components/Subtypes";
+
 import { mathSubtypeIcon } from "./icon";
 import { getMathSubtypeRecord } from "./types";
-import { SubtypeButton } from "../../components/Subtypes";
+import fallbackMathJaxLangData from "./locales/en.json";
+
+import type { SubtypeLoadedCb, SubtypeMethods, SubtypePrepFn } from "../";
+import type { AppClassProperties, AppState } from "../../types";
+import type { Action } from "../../actions/types";
+import type { LangLdr } from "../../i18n";
 
 const mathSubtype = getMathSubtypeRecord().subtype;
 const FONT_FAMILY_MATH = FONT_FAMILY.Helvetica;
@@ -57,7 +63,8 @@ type ExcalidrawMathElement = ExcalidrawTextElement &
 const isMathElement = (
   element: ExcalidrawElement | null,
 ): element is ExcalidrawMathElement => {
-  const result = isTextElement(element) &&
+  const result =
+    isTextElement(element) &&
     "subtype" in element &&
     element.subtype === mathSubtype;
   return result;
@@ -345,7 +352,8 @@ const joinMath = (
   let joined = "";
   for (let index = 0; index < text.length; index++) {
     const space = index > 0 ? " " : "";
-    const segment = mathProps.mathOnly && isMathJaxLoaded
+    const segment =
+      mathProps.mathOnly && isMathJaxLoaded
         ? `${space}${text[index]}`
         : inText
         ? text[index]
@@ -948,144 +956,154 @@ const measureMathElement = function (element, next) {
   return metrics;
 } as SubtypeMethods["measureText"];
 
-const renderMathElement = function (element, elementMap, context, renderConfig) {
+const renderMathElement = function (
+  element,
+  elementMap,
+  context,
+  renderConfig,
+) {
   ensureMathElement(element);
   const isMathJaxLoaded = mathJaxLoaded;
 
   try {
     const _element = element as NonDeleted<ExcalidrawMathElement>;
 
-  const text = _element.text;
-  const fontSize = _element.fontSize;
-  const lineHeight = _element.lineHeight;
-  const strokeColor = _element.strokeColor;
-  const textAlign = _element.textAlign;
-  const opacity = _element.opacity / 100;
-  const mathProps = getMathProps.ensureMathProps(_element.customData);
-  const onAsyncRender = renderConfig?.onAsyncRender;
+    const text = _element.text;
+    const fontSize = _element.fontSize;
+    const lineHeight = _element.lineHeight;
+    const strokeColor = _element.strokeColor;
+    const textAlign = _element.textAlign;
+    const opacity = _element.opacity / 100;
+    const mathProps = getMathProps.ensureMathProps(_element.customData);
+    const onAsyncRender = renderConfig?.onAsyncRender;
 
-  let _childIsSvg: boolean;
-  let _text: string;
-  let _svg: SVGSVGElement;
+    let _childIsSvg: boolean;
+    let _text: string;
+    let _svg: SVGSVGElement;
 
-  const doSetupChild: (
-    childIsSvg: boolean,
-    svg: SVGSVGElement | null,
-    text: string,
-    rtl: boolean,
-    childRtl: boolean,
-  ) => void = function (childIsSvg, svg, text, rtl, childRtl) {
-    _childIsSvg = childIsSvg;
-    _text = text;
+    const doSetupChild: (
+      childIsSvg: boolean,
+      svg: SVGSVGElement | null,
+      text: string,
+      rtl: boolean,
+      childRtl: boolean,
+    ) => void = function (childIsSvg, svg, text, rtl, childRtl) {
+      _childIsSvg = childIsSvg;
+      _text = text;
 
-    if (_childIsSvg) {
-      _svg = svg!;
-    } else {
-      context.save();
-      context.canvas.setAttribute("dir", childRtl ? "rtl" : "ltr");
-      context.font = getFontString({ fontSize, fontFamily: FONT_FAMILY_MATH });
-      context.fillStyle = _element.strokeColor;
-      context.textAlign = _element.textAlign as CanvasTextAlign;
-    }
-  };
-
-  const doRenderChild: (
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-  ) => void = function (x, y, width, height) {
-    if (_childIsSvg) {
-      const key = getCacheKey(
-        _text,
-        fontSize,
-        strokeColor,
-        "left",
-        1,
-        mathProps,
-      );
-
-      const _x = Math.round(x);
-      const _y = Math.round(y);
-      const imgKey = `${key}, ${width}, ${height}`;
-      if (
-        isMathJaxLoaded &&
-        imageCache[imgKey] &&
-        imageCache[imgKey] !== undefined
-      ) {
-        const img = imageCache[imgKey];
-        const [width, height] = [img.naturalWidth, img.naturalHeight];
-        context.drawImage(img, _x, _y, width, height);
+      if (_childIsSvg) {
+        _svg = svg!;
       } else {
-        const img = new Image();
-        _svg.setAttribute("width", `${width}`);
-        _svg.setAttribute("height", `${height}`);
-        _svg.setAttribute("color", `${strokeColor}`);
-        const svgString = _svg.outerHTML;
-        const svg = new Blob([svgString], {
-          type: "image/svg+xml;charset=utf-8",
+        context.save();
+        context.canvas.setAttribute("dir", childRtl ? "rtl" : "ltr");
+        context.font = getFontString({
+          fontSize,
+          fontFamily: FONT_FAMILY_MATH,
         });
-        const transformMatrix = context.getTransform();
-        const reader = new FileReader();
-        reader.addEventListener(
-          "load",
-          () => {
-            img.onload = function () {
-              const [width, height] = [img.naturalWidth, img.naturalHeight];
-              context.save();
-              context.setTransform(transformMatrix);
-              context.globalAlpha = opacity;
-              context.drawImage(img, _x, _y, width, height);
-              context.restore();
-              if (isMathJaxLoaded) {
-                imageCache[imgKey] = img;
-              }
-              // Trigger re-render after async image load
-              if (onAsyncRender) {
-                onAsyncRender();
-              }
-            };
-            img.src = reader.result as string;
-          },
-          false,
-        );
-        reader.readAsDataURL(svg);
+        context.fillStyle = _element.strokeColor;
+        context.textAlign = _element.textAlign as CanvasTextAlign;
       }
-    } else {
-      const childOffset =
-        textAlign === "center"
-          ? (width - 1) / 2
-          : textAlign === "right"
-          ? width - 1
-          : 0;
-      context.fillText(_text, x + childOffset, y);
-      context.restore();
-    }
-  };
-  // Guard against undefined elementMap
-  const container = elementMap ? getContainerElement(_element, elementMap) : null;
-  const parentWidth = container
-    ? getBoundTextMaxWidth(container, _element)
-    : undefined;
+    };
 
-  const offsetX =
-    (_element.width - (container ? parentWidth! : _element.width)) *
-    (textAlign === "right" ? 1 : textAlign === "center" ? 1 / 2 : 0);
+    const doRenderChild: (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+    ) => void = function (x, y, width, height) {
+      if (_childIsSvg) {
+        const key = getCacheKey(
+          _text,
+          fontSize,
+          strokeColor,
+          "left",
+          1,
+          mathProps,
+        );
 
-  context.save();
-  context.translate(offsetX, 0);
-  element.customData!.ariaLabel = renderMath(
-    text,
-    fontSize,
-    lineHeight,
-    textAlign,
-    mathProps,
-    isMathJaxLoaded,
-    doSetupChild,
-    doRenderChild,
-    parentWidth,
-  );
-  context.restore();
+        const _x = Math.round(x);
+        const _y = Math.round(y);
+        const imgKey = `${key}, ${width}, ${height}`;
+        if (
+          isMathJaxLoaded &&
+          imageCache[imgKey] &&
+          imageCache[imgKey] !== undefined
+        ) {
+          const img = imageCache[imgKey];
+          const [width, height] = [img.naturalWidth, img.naturalHeight];
+          context.drawImage(img, _x, _y, width, height);
+        } else {
+          const img = new Image();
+          _svg.setAttribute("width", `${width}`);
+          _svg.setAttribute("height", `${height}`);
+          _svg.setAttribute("color", `${strokeColor}`);
+          const svgString = _svg.outerHTML;
+          const svg = new Blob([svgString], {
+            type: "image/svg+xml;charset=utf-8",
+          });
+          const transformMatrix = context.getTransform();
+          const reader = new FileReader();
+          reader.addEventListener(
+            "load",
+            () => {
+              img.onload = function () {
+                const [width, height] = [img.naturalWidth, img.naturalHeight];
+                context.save();
+                context.setTransform(transformMatrix);
+                context.globalAlpha = opacity;
+                context.drawImage(img, _x, _y, width, height);
+                context.restore();
+                if (isMathJaxLoaded) {
+                  imageCache[imgKey] = img;
+                }
+                // Trigger re-render after async image load
+                if (onAsyncRender) {
+                  onAsyncRender();
+                }
+              };
+              img.src = reader.result as string;
+            },
+            false,
+          );
+          reader.readAsDataURL(svg);
+        }
+      } else {
+        const childOffset =
+          textAlign === "center"
+            ? (width - 1) / 2
+            : textAlign === "right"
+            ? width - 1
+            : 0;
+        context.fillText(_text, x + childOffset, y);
+        context.restore();
+      }
+    };
+    // Guard against undefined elementMap
+    const container = elementMap
+      ? getContainerElement(_element, elementMap)
+      : null;
+    const parentWidth = container
+      ? getBoundTextMaxWidth(container, _element)
+      : undefined;
+
+    const offsetX =
+      (_element.width - (container ? parentWidth! : _element.width)) *
+      (textAlign === "right" ? 1 : textAlign === "center" ? 1 / 2 : 0);
+
+    context.save();
+    context.translate(offsetX, 0);
+    element.customData!.ariaLabel = renderMath(
+      text,
+      fontSize,
+      lineHeight,
+      textAlign,
+      mathProps,
+      isMathJaxLoaded,
+      doSetupChild,
+      doRenderChild,
+      parentWidth,
+    );
+    context.restore();
   } catch (error) {
     console.error("Error in renderMathElement:", error);
     throw error;
@@ -1153,7 +1171,9 @@ const renderSvgMathElement = function (
   tempSvg.appendChild(groupNode);
 
   // Guard against undefined elementsMap
-  const container = elementsMap ? getContainerElement(_element, elementsMap) : null;
+  const container = elementsMap
+    ? getContainerElement(_element, elementsMap)
+    : null;
   const parentWidth = container
     ? getBoundTextMaxWidth(container, _element)
     : undefined;
@@ -1575,14 +1595,22 @@ const createMathActions = () => {
             ShapeCache.delete(newElement);
 
             // Create custom measurement functions that use the subtype's methods
-            const customMeasureFn = (text: string, font: string, lineHeight: number) => {
+            const customMeasureFn = (
+              text: string,
+              font: string,
+              lineHeight: number,
+            ) => {
               const result = measureMathElement(newElement, {
                 text,
                 customData,
               });
               return result;
             };
-            const customWrapFn = (text: string, font: string, maxWidth: number) => {
+            const customWrapFn = (
+              text: string,
+              font: string,
+              maxWidth: number,
+            ) => {
               const result = wrapMathElement(newElement, maxWidth, {
                 text,
                 customData,

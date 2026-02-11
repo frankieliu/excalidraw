@@ -1,7 +1,6 @@
 # File Handling & UI Improvements
 
-**Date**: 2026-02-09
-**Author**: Claude (AI Assistant)
+**Date**: 2026-02-09 **Author**: Claude (AI Assistant)
 
 ## Overview
 
@@ -55,6 +54,7 @@ export const normalizeFile = async (file: File) => {
 ```
 
 **Files Modified**:
+
 - `packages/excalidraw/data/blob.ts`
 
 ### 2. Dynamic Browser Tab Title
@@ -109,6 +109,7 @@ const onChange = (
 ```
 
 **Behavior**:
+
 - When no file is open: `Excalidraw Whiteboard`
 - When a file is open: `Excalidraw: <filename>` (without `.excalidraw` extension)
 - Title updates automatically when:
@@ -117,6 +118,7 @@ const onChange = (
   - A file is saved with a new name
 
 **Files Modified**:
+
 - `excalidraw-app/App.tsx`
 
 ## Technical Details
@@ -126,6 +128,7 @@ const onChange = (
 The file handle flows through the application as follows:
 
 1. **File Opening**:
+
    - User clicks "Open" in hamburger menu
    - `fileOpen()` from `browser-fs-access` library is called
    - Browser's File System Access API attaches a `handle` property to the File object
@@ -134,6 +137,7 @@ The file handle flows through the application as follows:
    - Handle is stored in `appState.fileHandle`
 
 2. **Menu Visibility**:
+
    - `actionSaveToActiveFile` predicate checks `!!appState.fileHandle`
    - If fileHandle exists, "Save to current file" menu item appears
    - Menu item is rendered by `SaveToActiveFile` component in `DefaultItems.tsx`
@@ -146,7 +150,7 @@ The file handle flows through the application as follows:
 ### Key Components
 
 | Component | File | Purpose |
-|-----------|------|---------|
+| --- | --- | --- |
 | `normalizeFile` | `packages/excalidraw/data/blob.ts` | Normalizes file MIME types, now preserves handle |
 | `fileOpen` | `packages/excalidraw/data/filesystem.ts` | Opens file picker, calls normalizeFile |
 | `loadFromJSON` | `packages/excalidraw/data/json.ts` | Loads JSON files, passes handle through |
@@ -158,6 +162,7 @@ The file handle flows through the application as follows:
 ### Manual Testing Steps
 
 1. **Test "Save to current file" fix**:
+
    ```
    1. Start dev server: yarn dev
    2. Open Excalidraw in browser
@@ -216,12 +221,13 @@ Potential enhancements for consideration:
 
 1. **Persistent File Handle**: Explore using IndexedDB to persist file handles across sessions (where supported by File System Access API)
 2. **Tab Icon**: Add a favicon indicator when a file is open
-3. **Unsaved Changes Indicator**: Show "*" in tab title when there are unsaved changes
+3. **Unsaved Changes Indicator**: Show "\*" in tab title when there are unsaved changes
 4. **Recent Files**: Maintain a list of recently opened files with their handles
 
 ## Related Issues
 
 This fix addresses issues related to:
+
 - File System Access API integration
 - File handle management
 - User experience improvements
@@ -236,5 +242,4 @@ This fix addresses issues related to:
 
 ---
 
-**Status**: ✅ Implemented and tested
-**Version**: Excalidraw Fork (2026-02-09)
+**Status**: ✅ Implemented and tested **Version**: Excalidraw Fork (2026-02-09)

@@ -1,8 +1,6 @@
 # MathJax Integration Status
 
-**Last Updated**: 2026-02-07
-**Branch**: mathjax-svg-import-rebased
-**Status**: 80% Complete (WIP)
+**Last Updated**: 2026-02-07 **Branch**: mathjax-svg-import-rebased **Status**: 80% Complete (WIP)
 
 ## Overview
 
@@ -11,12 +9,15 @@ The MathJax subtype system has been integrated from the `danieljgeiger-mathjax-m
 ## What's Working ✅
 
 ### 1. Dependencies Installed
+
 - ✅ `mathjax-full@3.2.2` - MathJax library for math rendering
 - ✅ `patch-package@8.0.0` - For applying browser compatibility patches
 - ✅ MathJax patch successfully applied during install
 
 ### 2. Core Infrastructure
+
 - ✅ **Subtype System** (`packages/excalidraw/subtypes/index.ts`) - 541 lines
+
   - Generic plugin architecture for element subtypes
   - Action registration and management
   - Subtype lifecycle hooks
@@ -30,17 +31,20 @@ The MathJax subtype system has been integrated from the `danieljgeiger-mathjax-m
   - Text measurement with math overhead
 
 ### 3. Type System Updates
+
 - ✅ **Element Types** - Added `subtype?: string` field to base element type
 - ✅ **App State** - Added `activeSubtypes` and `customData` fields
 - ✅ **API** - Added `addSubtype` method to ExcalidrawImperativeAPI
 - ✅ **Element Creation** - Updated `newElement` to support subtypes
 
 ### 4. App Integration
+
 - ✅ **App.tsx** - Implemented `addSubtype` method
 - ✅ **Action Manager** - Registered subtype action predicate
 - ✅ **Export** - `useMathSubtype` hook available for use
 
 ### 5. Import Paths
+
 - ✅ All import paths resolved correctly for new file locations
 - ✅ Proper use of `@excalidraw/element` and `@excalidraw/common` packages
 
@@ -49,32 +53,41 @@ The MathJax subtype system has been integrated from the `danieljgeiger-mathjax-m
 ### TypeScript Type Errors (17 remaining)
 
 #### 1. **Scene API Changes**
+
 ```typescript
 // Error: Property 'getScene' does not exist on type 'typeof Scene'
-Scene.getScene(elements)
+Scene.getScene(elements);
 ```
+
 **Fix**: The Scene API has changed. Need to update to current API.
 
 #### 2. **Action Function Signatures**
+
 ```typescript
 // Error: ActionFn type mismatch
-predicate: (...rest) => rest[4] === undefined
+predicate: (...rest) => rest[4] === undefined;
 ```
+
 **Fix**: Action predicate functions now take 4 parameters, not 5. Update all action predicates.
 
 #### 3. **Line Height Type Branding**
+
 ```typescript
 // Error: number not assignable to unitlessLineHeight branded type
-getLineHeightInPx(fontFamily, fontSize, lineHeight)
+getLineHeightInPx(fontFamily, fontSize, lineHeight);
 ```
+
 **Fix**: Wrap line height values in proper type constructors.
 
 #### 4. **Missing Translation Keys**
+
 ```typescript
 // Error: "labels.changeMathOnly" not in translation type
-t("labels.changeMathOnly")
+t("labels.changeMathOnly");
 ```
+
 **Fix**: Add MathJax translation keys to `packages/excalidraw/locales/en.json`:
+
 ```json
 {
   "labels": {
@@ -94,13 +107,16 @@ t("labels.changeMathOnly")
 ```
 
 #### 5. **ButtonIconSelect Component**
+
 ```typescript
 // Error: Could not resolve "../../components/ButtonIconSelect"
 import { ButtonIconSelect } from "../../components/ButtonIconSelect";
 ```
+
 **Status**: Temporarily commented out. This component doesn't exist in the current branch.
 
 **Options**:
+
 - Use `ButtonIconCycle` component instead
 - Create a simple replacement component
 - Leave as plain text for now
@@ -108,6 +124,7 @@ import { ButtonIconSelect } from "../../components/ButtonIconSelect";
 ## How to Complete the Integration
 
 ### Option 1: Fix Type Errors (Recommended)
+
 1. Update Scene API calls to match current implementation
 2. Fix action function signatures (remove 5th parameter references)
 3. Add proper line height type conversions
@@ -117,6 +134,7 @@ import { ButtonIconSelect } from "../../components/ButtonIconSelect";
 **Estimated Time**: 2-3 hours of careful API alignment
 
 ### Option 2: Use TypeScript Workarounds
+
 1. Add `// @ts-expect-error` comments for known incompatibilities
 2. Cast types where necessary
 3. Focus on getting it working first, fix types later
@@ -124,6 +142,7 @@ import { ButtonIconSelect } from "../../components/ButtonIconSelect";
 **Estimated Time**: 30 minutes, but less type-safe
 
 ### Option 3: Simplify First Implementation
+
 1. Comment out complex UI interactions
 2. Focus on core math rendering only
 3. Add UI features incrementally
@@ -135,24 +154,29 @@ import { ButtonIconSelect } from "../../components/ButtonIconSelect";
 Once the build succeeds:
 
 1. **Start Dev Server**
+
    ```bash
    yarn start
    ```
 
 2. **Test Math Element Creation**
+
    - Look for "Math" button in shape toolbar
    - Click to activate math mode
    - Type text element with math notation
 
 3. **Test TeX Input**
+
    - Use LaTeX delimiters: `$x^2 + y^2 = r^2$`
    - Should render as formatted math
 
 4. **Test AsciiMath Input**
+
    - Use backtick delimiters: `` `x^2 + y^2 = r^2` ``
    - Simpler syntax for basic math
 
 5. **Test Math-Only Mode**
+
    - Toggle to render entire text as math (no mixed content)
 
 6. **Test SVG Export**
@@ -162,15 +186,18 @@ Once the build succeeds:
 ## Files Modified
 
 ### Core Files
+
 - `package.json` - Added patch-package
 - `packages/excalidraw/package.json` - Added mathjax-full
 - `yarn.lock` - Dependency resolution
 
 ### Element System
+
 - `packages/element/src/types.ts` - Added subtype field
 - `packages/element/src/newElement.ts` - Subtype selection support
 
 ### Excalidraw Package
+
 - `packages/excalidraw/types.ts` - AppState and API updates
 - `packages/excalidraw/components/App.tsx` - addSubtype implementation
 - `packages/excalidraw/index.tsx` - Export useMathSubtype
@@ -179,6 +206,7 @@ Once the build succeeds:
 - `packages/excalidraw/i18n.ts` - Custom lang data registration
 
 ### New Files
+
 - `patches/mathjax-full+3.2.2.patch` - MathJax browser compatibility
 - `packages/excalidraw/subtypes/` - Complete subtype system (7 files)
 - `packages/excalidraw/components/Subtypes.tsx` - Subtype UI components
@@ -186,6 +214,7 @@ Once the build succeeds:
 ## API Changes Summary
 
 ### New Element Fields
+
 ```typescript
 interface ExcalidrawElement {
   subtype?: string;
@@ -194,6 +223,7 @@ interface ExcalidrawElement {
 ```
 
 ### New AppState Fields
+
 ```typescript
 interface AppState {
   activeSubtypes?: string[];
@@ -202,6 +232,7 @@ interface AppState {
 ```
 
 ### New API Method
+
 ```typescript
 interface ExcalidrawImperativeAPI {
   addSubtype: (
@@ -215,6 +246,7 @@ interface ExcalidrawImperativeAPI {
 ```
 
 ### Using the Math Subtype
+
 ```typescript
 import { Excalidraw, useMathSubtype } from "@excalidraw/excalidraw";
 
@@ -253,5 +285,4 @@ function App() {
 
 ---
 
-**Status**: Ready for type error fixes and testing
-**Commit**: 4330e870 - "WIP: Add MathJax subtype system integration (partial)"
+**Status**: Ready for type error fixes and testing **Commit**: 4330e870 - "WIP: Add MathJax subtype system integration (partial)"

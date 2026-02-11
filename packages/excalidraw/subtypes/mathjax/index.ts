@@ -1,7 +1,9 @@
-import type { ExcalidrawImperativeAPI } from "../../types";
 import { useSubtype } from "../";
+
 import { getMathSubtypeRecord } from "./types";
 import { prepareMathSubtype } from "./implementation";
+
+import type { ExcalidrawImperativeAPI } from "../../types";
 
 declare global {
   module SREfeature {

@@ -258,16 +258,6 @@ import {
   getUncroppedWidthAndHeight,
 } from "@excalidraw/element";
 
-import {
-  prepareSubtype,
-  checkRefreshOnSubtypeLoad,
-  type SubtypeRecord,
-  type SubtypePrepFn,
-  type SubtypeMethods,
-  selectSubtype,
-  getSubtypeMethods,
-} from "../subtypes";
-
 import type { GlobalPoint, LocalPoint, Radians } from "@excalidraw/math";
 
 import type {
@@ -297,6 +287,16 @@ import type {
 } from "@excalidraw/element/types";
 
 import type { Mutable, ValueOf } from "@excalidraw/common/utility-types";
+
+import {
+  prepareSubtype,
+  checkRefreshOnSubtypeLoad,
+  type SubtypeRecord,
+  type SubtypePrepFn,
+  type SubtypeMethods,
+  selectSubtype,
+  getSubtypeMethods,
+} from "../subtypes";
 
 import {
   actionAddToLibrary,
@@ -5338,8 +5338,13 @@ class App extends React.Component<AppProps, AppState> {
   addSubtype = (
     record: SubtypeRecord,
     subtypePrepFn: SubtypePrepFn,
-  ): { actions: readonly Action[] | null; methods: Partial<SubtypeMethods> } => {
-    const onSubtypeLoaded = (hasSubtype: (element: ExcalidrawElement) => boolean) => {
+  ): {
+    actions: readonly Action[] | null;
+    methods: Partial<SubtypeMethods>;
+  } => {
+    const onSubtypeLoaded = (
+      hasSubtype: (element: ExcalidrawElement) => boolean,
+    ) => {
       if (
         checkRefreshOnSubtypeLoad(
           hasSubtype,
@@ -5519,7 +5524,11 @@ class App extends React.Component<AppProps, AppState> {
       onChange: withBatchedUpdates((nextOriginalText) => {
         updateElement(nextOriginalText, false);
         if (isNonDeletedElement(element)) {
-          updateBoundElements(element, this.scene, this.getMathMeasurementOptions(element));
+          updateBoundElements(
+            element,
+            this.scene,
+            this.getMathMeasurementOptions(element),
+          );
         }
       }),
       onSubmit: withBatchedUpdates(({ viaKeyboard, nextOriginalText }) => {
@@ -5535,14 +5544,22 @@ class App extends React.Component<AppProps, AppState> {
               const container = this.scene.getContainerElement(updatedElement);
 
               // Create custom measurement functions that use the subtype's methods
-              const customMeasureFn = (text: string, font: string, lineHeight: number) => {
+              const customMeasureFn = (
+                text: string,
+                font: string,
+                lineHeight: number,
+              ) => {
                 return methods.measureText(updatedElement, {
                   text,
                   fontSize: updatedElement.fontSize,
                 });
               };
 
-              const customWrapFn = (text: string, font: string, maxWidth: number) => {
+              const customWrapFn = (
+                text: string,
+                font: string,
+                maxWidth: number,
+              ) => {
                 return methods.wrapText(updatedElement, maxWidth, {
                   text,
                   fontSize: updatedElement.fontSize,
@@ -9727,7 +9744,11 @@ class App extends React.Component<AppProps, AppState> {
                   isBindableElement(element) &&
                   element.boundElements?.some((other) => other.type === "arrow")
                 ) {
-                  updateBoundElements(element, this.scene, this.getMathMeasurementOptions(element));
+                  updateBoundElements(
+                    element,
+                    this.scene,
+                    this.getMathMeasurementOptions(element),
+                  );
                 }
               });
 
@@ -11937,7 +11958,11 @@ class App extends React.Component<AppProps, AppState> {
           ),
         );
 
-        updateBoundElements(croppingElement, this.scene, this.getMathMeasurementOptions(croppingElement));
+        updateBoundElements(
+          croppingElement,
+          this.scene,
+          this.getMathMeasurementOptions(croppingElement),
+        );
 
         this.setState({
           isCropping: transformHandleType && transformHandleType !== "rotation",

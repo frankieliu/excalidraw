@@ -11,20 +11,20 @@ This document lists keyboard shortcuts for custom features added to this Excalid
 ### Text & Math Features
 
 | Action | Windows/Linux | Mac | Description |
-|--------|---------------|-----|-------------|
+| --- | --- | --- | --- |
 | Toggle Math Mode | `Ctrl + Shift + M` | `Cmd + Shift + M` | Switch between math-only and mixed text mode (MathJax feature) |
 
 ### Import Features
 
 | Action | Windows/Linux | Mac | Description |
-|--------|---------------|-----|-------------|
+| --- | --- | --- | --- |
 | Import SVG | `Ctrl + Shift + I` | `Cmd + Shift + I` | Open SVG file import dialog |
 | Import Excalidraw | `Ctrl + Shift + X` | `Cmd + Shift + X` | Import Excalidraw file content into current scene |
 
 ### UI & Panels
 
 | Action | Windows/Linux | Mac | Description |
-|--------|---------------|-----|-------------|
+| --- | --- | --- | --- |
 | Toggle Properties Panel | `Ctrl + /` | `Option + /` | Open/close the Stats/Properties panel on the right side |
 
 **Note**: The Properties panel shortcut on Mac is `Option + /`, not `Cmd + /`.
@@ -33,16 +33,16 @@ This document lists keyboard shortcuts for custom features added to this Excalid
 
 ### File Operations
 
-| Action | Windows/Linux | Mac |
-|--------|---------------|-----|
-| Open | `Ctrl + O` | `Cmd + O` |
-| Save to current file | `Ctrl + S` | `Cmd + S` |
-| Save As | `Ctrl + Shift + S` | `Cmd + Shift + S` |
+| Action               | Windows/Linux      | Mac               |
+| -------------------- | ------------------ | ----------------- |
+| Open                 | `Ctrl + O`         | `Cmd + O`         |
+| Save to current file | `Ctrl + S`         | `Cmd + S`         |
+| Save As              | `Ctrl + Shift + S` | `Cmd + Shift + S` |
 
 ### Development
 
-| Action | Windows/Linux | Mac |
-|--------|---------------|-----|
+| Action               | Windows/Linux      | Mac               |
+| -------------------- | ------------------ | ----------------- |
 | Hard refresh browser | `Ctrl + Shift + R` | `Cmd + Shift + R` |
 
 ## Shortcut Conflicts
@@ -54,6 +54,7 @@ This document lists keyboard shortcuts for custom features added to this Excalid
 ### Avoiding Conflicts
 
 When adding new keyboard shortcuts:
+
 - Check existing shortcuts in `packages/excalidraw/actions/` files
 - Avoid conflicts with browser shortcuts (e.g., `Cmd + W`, `Cmd + T`)
 - Use Shift modifiers for secondary actions
@@ -70,16 +71,18 @@ When adding new keyboard shortcuts:
 ### Debug Non-Working Shortcuts
 
 1. **Check browser DevTools Console** for errors:
+
    ```
    Open DevTools: F12 or Cmd+Option+I (Mac) / Ctrl+Shift+I (Windows/Linux)
    ```
 
 2. **Check if shortcut is registered**:
+
    - Look in `packages/excalidraw/actions/` for the action
    - Find `keyTest` function that defines the shortcut
    - Example:
      ```typescript
-     keyTest: (event) => event[KEYS.CTRL_OR_CMD] && event.key === KEYS.O
+     keyTest: (event) => event[KEYS.CTRL_OR_CMD] && event.key === KEYS.O;
      ```
 
 3. **Check for conflicts**:
@@ -90,17 +93,17 @@ When adding new keyboard shortcuts:
 
 ### Modifier Key Mapping
 
-| Modifier | Windows/Linux | Mac |
-|----------|---------------|-----|
-| Primary | `Ctrl` | `Cmd` (⌘) |
-| Secondary | `Alt` | `Option` (⌥) |
-| Tertiary | `Shift` | `Shift` |
+| Modifier  | Windows/Linux | Mac          |
+| --------- | ------------- | ------------ |
+| Primary   | `Ctrl`        | `Cmd` (⌘)    |
+| Secondary | `Alt`         | `Option` (⌥) |
+| Tertiary  | `Shift`       | `Shift`      |
 
 ### Common Patterns
 
 ```typescript
 // Cross-platform primary modifier (Ctrl/Cmd)
-event[KEYS.CTRL_OR_CMD] && event.key === 'S'
+event[KEYS.CTRL_OR_CMD] && event.key === "S";
 
 // Platform-specific
 if (isMac) {
@@ -115,10 +118,12 @@ if (isMac) {
 ### Step-by-Step Guide
 
 1. **Choose an available shortcut**:
+
    - Check this document for conflicts
    - Avoid common browser shortcuts
 
 2. **Define in action file**:
+
    ```typescript
    // packages/excalidraw/actions/actionYourFeature.ts
    export const actionYourFeature = register({
@@ -126,13 +131,12 @@ if (isMac) {
      label: "labels.yourFeature",
      // ... other properties
      keyTest: (event) =>
-       event[KEYS.CTRL_OR_CMD] &&
-       event.shiftKey &&
-       event.key === KEYS.Y,
+       event[KEYS.CTRL_OR_CMD] && event.shiftKey && event.key === KEYS.Y,
    });
    ```
 
 3. **Document the shortcut**:
+
    - Add to this file
    - Add to feature-specific documentation
    - Update tooltips/help text
@@ -147,6 +151,7 @@ if (isMac) {
 ### Help Dialog
 
 Users can discover shortcuts via:
+
 1. Press `?` or `Shift + /` to open Help dialog
 2. View "Shortcuts" section
 
@@ -157,7 +162,7 @@ Most toolbar buttons show shortcuts on hover.
 ## Related Files
 
 | File | Purpose |
-|------|---------|
+| --- | --- |
 | `packages/excalidraw/keys.ts` | Keyboard key constants |
 | `packages/excalidraw/actions/shortcuts.ts` | Shortcut utilities |
 | `packages/excalidraw/actions/*.tsx` | Individual action shortcuts |

@@ -1,8 +1,6 @@
 # File Handle Persistence Across Page Reloads
 
-**Date**: 2026-02-10
-**Status**: 📋 Proposed
-**Related**: [FILE_HANDLING_IMPROVEMENTS.md](./FILE_HANDLING_IMPROVEMENTS.md)
+**Date**: 2026-02-10 **Status**: 📋 Proposed **Related**: [FILE_HANDLING_IMPROVEMENTS.md](./FILE_HANDLING_IMPROVEMENTS.md)
 
 ## Problem Statement
 
@@ -20,6 +18,7 @@ This creates a confusing user experience where the drawing is remembered but the
 ### What's Persisted vs Lost
 
 **Currently Saved (survives reload):**
+
 - ✅ Canvas elements → `localStorage["excalidraw"]`
 - ✅ Binary files/images → `IndexedDB["files-db"]["files-store"]`
 - ✅ File name → `localStorage["excalidraw-state"]` (as `appState.name`)
@@ -27,6 +26,7 @@ This creates a confusing user experience where the drawing is remembered but the
 - ✅ Library items → `IndexedDB["excalidraw-library-db"]`
 
 **Currently Lost (doesn't survive reload):**
+
 - ❌ **File handle** (`appState.fileHandle`)
 - ❌ File path information
 - ❌ File write permissions
@@ -154,7 +154,10 @@ Hook into existing file operations to save the handle:
 // In excalidraw-app/data/FileManager.tsx or App.tsx
 
 // After loading a file
-const loadFileToCanvas = async (file: File, fileHandle?: FileSystemFileHandle) => {
+const loadFileToCanvas = async (
+  file: File,
+  fileHandle?: FileSystemFileHandle,
+) => {
   // ... existing file loading logic ...
 
   if (fileHandle) {
@@ -190,7 +193,9 @@ const initializeScene = async () => {
   if (savedHandle) {
     try {
       // CRITICAL: Request permission to use the handle
-      const permission = await savedHandle.queryPermission({ mode: "readwrite" });
+      const permission = await savedHandle.queryPermission({
+        mode: "readwrite",
+      });
 
       if (permission === "granted") {
         // Permission already granted, restore immediately
@@ -199,7 +204,9 @@ const initializeScene = async () => {
         });
       } else if (permission === "prompt") {
         // Need to request permission (browser will show prompt)
-        const newPermission = await savedHandle.requestPermission({ mode: "readwrite" });
+        const newPermission = await savedHandle.requestPermission({
+          mode: "readwrite",
+        });
 
         if (newPermission === "granted") {
           excalidrawAPI.updateScene({
@@ -241,11 +248,13 @@ const createNewDrawing = async () => {
 The File System Access API requires re-requesting permissions after page reload:
 
 1. **Query Permission**: Check if permission is still granted
+
    - `granted` → Restore handle immediately
    - `prompt` → Show browser permission dialog
    - `denied` → Clear saved handle
 
 2. **Request Permission**: If needed, prompt user
+
    - Can be done silently on page load
    - Or defer until first save attempt
    - Browser UI clearly shows which file
@@ -258,6 +267,7 @@ The File System Access API requires re-requesting permissions after page reload:
 ### User Experience Flow
 
 **Scenario 1: Happy Path (Permission Granted)**
+
 ```
 User opens file → Draws → Reloads page
   ↓
@@ -273,6 +283,7 @@ Tab title shows filename → User continues working
 ```
 
 **Scenario 2: Permission Required**
+
 ```
 User opens file → Draws → Reloads page
   ↓
@@ -288,6 +299,7 @@ User clicks "Allow" → File handle restored
 ```
 
 **Scenario 3: Permission Denied or File Deleted**
+
 ```
 User opens file → Draws → Reloads page
   ↓
@@ -305,24 +317,28 @@ User experience: Same as current behavior
 ## Implementation Plan
 
 ### Phase 1: Core Storage Layer
+
 - [ ] Create `FileHandleStorage` class in `LocalData.ts`
 - [ ] Add IndexedDB database initialization
 - [ ] Implement `saveHandle()`, `getHandle()`, `clearHandle()` methods
 - [ ] Add error handling and fallbacks
 
 ### Phase 2: Integration with File Operations
+
 - [ ] Hook into file open operations (in `FileManager.tsx` or `filesystem.ts`)
 - [ ] Hook into file save operations
 - [ ] Add handle clearing for "New Drawing" action
 - [ ] Update relevant action handlers
 
 ### Phase 3: Page Load Restoration
+
 - [ ] Add restoration logic to app initialization (`App.tsx`)
 - [ ] Implement permission request flow
 - [ ] Handle permission denied cases gracefully
 - [ ] Add error logging for debugging
 
 ### Phase 4: Testing & Polish
+
 - [ ] Test with various permission scenarios
 - [ ] Test file deletion/move edge cases
 - [ ] Test browser compatibility (Chrome, Edge, Safari)
@@ -330,6 +346,7 @@ User experience: Same as current behavior
 - [ ] Update documentation
 
 ### Phase 5: User Experience Enhancements
+
 - [ ] Show permission prompt explanation (optional)
 - [ ] Add "Reconnect to file" button if permission denied
 - [ ] Show notification when file handle restored
@@ -338,7 +355,7 @@ User experience: Same as current behavior
 ## Key Files to Modify
 
 | File | Purpose | Changes |
-|------|---------|---------|
+| --- | --- | --- |
 | `excalidraw-app/data/LocalData.ts` | Add FileHandleStorage class | New IndexedDB storage layer |
 | `excalidraw-app/App.tsx` | App initialization | Add file handle restoration |
 | `excalidraw-app/data/FileManager.tsx` | File operations | Save handle on open/save |
@@ -346,13 +363,13 @@ User experience: Same as current behavior
 
 ## Browser Compatibility
 
-| Browser | File System Access API | IndexedDB | File Handle Persistence |
-|---------|------------------------|-----------|-------------------------|
-| Chrome 86+ | ✅ Full support | ✅ | ✅ **Supported** |
-| Edge 86+ | ✅ Full support | ✅ | ✅ **Supported** |
-| Safari 15.2+ | ⚠️ Limited support | ✅ | ⚠️ **Partial** |
-| Firefox | ❌ No support | ✅ | ❌ **Not supported** |
-| Opera 72+ | ✅ Full support | ✅ | ✅ **Supported** |
+| Browser      | File System Access API | IndexedDB | File Handle Persistence |
+| ------------ | ---------------------- | --------- | ----------------------- |
+| Chrome 86+   | ✅ Full support        | ✅        | ✅ **Supported**        |
+| Edge 86+     | ✅ Full support        | ✅        | ✅ **Supported**        |
+| Safari 15.2+ | ⚠️ Limited support     | ✅        | ⚠️ **Partial**          |
+| Firefox      | ❌ No support          | ✅        | ❌ **Not supported**    |
+| Opera 72+    | ✅ Full support        | ✅        | ✅ **Supported**        |
 
 **Fallback**: Browsers without File System Access API will continue to work as they do now (without file handle persistence).
 
@@ -377,7 +394,7 @@ User experience: Same as current behavior
 ## Risks & Mitigations
 
 | Risk | Mitigation |
-|------|------------|
+| --- | --- |
 | Permission prompt annoys users | Only prompt once per session, cache permission state |
 | File deleted/moved causes errors | Catch errors, clear stale handles gracefully |
 | IndexedDB quota exceeded | Minimal data stored (one handle), quota unlikely to be an issue |
@@ -387,6 +404,7 @@ User experience: Same as current behavior
 ## Testing Strategy
 
 ### Manual Testing
+
 1. **Basic Flow**: Open file → Reload → Verify handle restored
 2. **Permission Flow**: Deny permission → Reload → Verify graceful fallback
 3. **File Deletion**: Open file → Delete file → Reload → Verify error handling
@@ -394,12 +412,14 @@ User experience: Same as current behavior
 5. **Multiple Tabs**: Open different files in tabs → Reload all → Verify each tab has correct handle
 
 ### Automated Testing
+
 1. Unit tests for `FileHandleStorage` class
 2. Integration tests for file operation hooks
 3. Mock File System Access API for testing
 4. Test error scenarios (denied permission, missing file, etc.)
 
 ### Browser Testing
+
 - Test in Chrome, Edge, Safari, Firefox
 - Test with permission prompts enabled/disabled
 - Test with file system access disabled
@@ -408,15 +428,19 @@ User experience: Same as current behavior
 ## Alternative Approaches Considered
 
 ### 1. Store File Path as String
+
 **Rejected**: Doesn't provide write access, security risk, path might be invalid
 
 ### 2. Automatically Reopen File on Load
+
 **Rejected**: Requires file picker interaction, can't be done silently
 
 ### 3. Use File System Access API queryPermission Only
+
 **Rejected**: Still need to store handle to query it
 
 ### 4. Store in localStorage as Serialized Object
+
 **Rejected**: FileSystemFileHandle cannot be serialized to JSON
 
 ## Future Enhancements
@@ -430,6 +454,7 @@ User experience: Same as current behavior
 ## Success Metrics
 
 After implementation, measure:
+
 - % of page reloads that successfully restore file handle
 - % of users who grant permission when prompted
 - Reduction in "Save As" usage after page reload

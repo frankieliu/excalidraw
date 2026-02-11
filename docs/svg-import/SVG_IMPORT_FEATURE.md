@@ -17,9 +17,11 @@ This document describes the implementation of SVG import functionality in Excali
 ## Files Created
 
 ### 1. `/packages/excalidraw/actions/actionImportSVG.tsx`
+
 **Purpose**: Core action implementation for SVG import
 
 **Key functionality**:
+
 - Creates hidden file input for .svg file selection
 - Uses `svg-to-excalidraw` library to convert SVG to Excalidraw format
 - Handles both string and object return types from the converter
@@ -29,6 +31,7 @@ This document describes the implementation of SVG import functionality in Excali
 - Keyboard shortcut handler: Ctrl/Cmd+Shift+I
 
 **Dependencies**:
+
 ```typescript
 import { register } from "./register";
 import { StoreAction } from "../store";
@@ -43,13 +46,17 @@ import svgToEx from "svg-to-excalidraw";
 ## Files Modified
 
 ### 1. `/packages/excalidraw/actions/index.ts`
+
 **Change**: Added export for `actionImportSVG`
+
 ```typescript
 export { actionImportSVG } from "./actionImportSVG";
 ```
 
 ### 2. `/packages/excalidraw/actions/types.ts`
+
 **Change**: Added "importSVG" to the ActionName type union
+
 ```typescript
 export type ActionName =
   | CustomActionName
@@ -58,16 +65,16 @@ export type ActionName =
 ```
 
 ### 3. `/packages/excalidraw/actions/shortcuts.ts`
+
 **Changes**:
+
 - Added "importSVG" to ShortcutName type
 - Registered Ctrl/Cmd+Shift+I keyboard shortcut
 
 ```typescript
 export type ShortcutName =
   // ... existing shortcuts
-  | "importSVG"
-  | "commandPalette"
-  | "searchMenu";
+  "importSVG" | "commandPalette" | "searchMenu";
 
 const shortcutMap: Record<ShortcutName, string[]> = {
   // ... existing shortcuts
@@ -77,6 +84,7 @@ const shortcutMap: Record<ShortcutName, string[]> = {
 ```
 
 ### 4. `/packages/excalidraw/locales/en.json`
+
 **Changes**: Added localization strings for SVG import
 
 ```json
@@ -94,7 +102,9 @@ const shortcutMap: Record<ShortcutName, string[]> = {
 ```
 
 ### 5. `/packages/excalidraw/components/main-menu/DefaultItems.tsx`
+
 **Changes**:
+
 - Imported `actionImportSVG`
 - Created `ImportSVG` component for the menu item
 
@@ -124,13 +134,14 @@ export const ImportSVG = () => {
 ```
 
 ### 6. `/excalidraw-app/components/AppMainMenu.tsx`
+
 **Change**: Added ImportSVG menu item after LoadScene
 
 ```typescript
 return (
   <MainMenu>
     <MainMenu.DefaultItems.LoadScene />
-    <MainMenu.DefaultItems.ImportSVG />  {/* NEW */}
+    <MainMenu.DefaultItems.ImportSVG /> {/* NEW */}
     <MainMenu.DefaultItems.SaveToActiveFile />
     // ... rest of menu items
   </MainMenu>
@@ -138,12 +149,13 @@ return (
 ```
 
 ### 7. `/packages/excalidraw/package.json`
+
 **Change**: Added svg-to-excalidraw as a file dependency
 
 ```json
 {
   "dependencies": {
-    "svg-to-excalidraw": "file:../../../svg-to-excalidraw",
+    "svg-to-excalidraw": "file:../../../svg-to-excalidraw"
     // ... other dependencies
   }
 }
@@ -152,6 +164,7 @@ return (
 ## Dependencies
 
 ### svg-to-excalidraw
+
 - **Location**: `/Users/frankliu/Library/CloudStorage/Box-Box/Work/svg-to-excalidraw`
 - **Type**: Local file dependency
 - **Purpose**: Converts SVG markup to Excalidraw's native element format
@@ -160,6 +173,7 @@ return (
 ## Setup Instructions
 
 ### Prerequisites
+
 - Node.js v18-20 (or use `--ignore-engines` flag)
 - Yarn package manager
 - Local svg-to-excalidraw library at `../../../svg-to-excalidraw` relative to `/packages/excalidraw`
@@ -167,16 +181,19 @@ return (
 ### Installation Steps
 
 1. **Navigate to project directory**:
+
    ```bash
    cd /Users/frankliu/Work/excalidraw
    ```
 
 2. **Install dependencies**:
+
    ```bash
    yarn install --ignore-engines
    ```
 
 3. **Apply MathJax patches** (required for math branch):
+
    ```bash
    npx patch-package --patch-dir patches
    ```
@@ -190,6 +207,7 @@ return (
 ### Single-Command Startup
 
 Add this to `/package.json` scripts section:
+
 ```json
 {
   "scripts": {
@@ -199,11 +217,13 @@ Add this to `/package.json` scripts section:
 ```
 
 Then run from project root:
+
 ```bash
 yarn dev
 ```
 
 Or create a shell script `start-excalidraw.sh`:
+
 ```bash
 #!/bin/bash
 cd /Users/frankliu/Work/excalidraw
@@ -214,6 +234,7 @@ npx vite
 ```
 
 Make it executable and run:
+
 ```bash
 chmod +x start-excalidraw.sh
 ./start-excalidraw.sh
@@ -222,6 +243,7 @@ chmod +x start-excalidraw.sh
 ## Running the Application
 
 ### Method 1: Manual Steps
+
 ```bash
 cd /Users/frankliu/Work/excalidraw
 yarn install --ignore-engines  # Only needed after dependency changes
@@ -231,6 +253,7 @@ npx vite
 ```
 
 ### Method 2: Using package.json script
+
 ```bash
 cd /Users/frankliu/Work/excalidraw
 yarn dev
@@ -241,6 +264,7 @@ The application will start at: **http://localhost:3000/**
 ## Using the Feature
 
 ### Via Menu
+
 1. Open http://localhost:3000/
 2. Click the hamburger menu (☰) in top-left corner
 3. Click "Import SVG..."
@@ -248,16 +272,19 @@ The application will start at: **http://localhost:3000/**
 5. SVG will be converted and added to canvas at center
 
 ### Via Keyboard
+
 1. Press **Ctrl/Cmd+Shift+I**
 2. Select an .svg file
 3. SVG will be imported
 
 ### Success Indicators
+
 - Toast notification: "Imported X elements from SVG"
 - Elements appear grouped at viewport center
 - Elements are automatically selected
 
 ### Error Handling
+
 - Invalid SVG: Shows error toast with details
 - Empty SVG: Shows "No elements found in SVG"
 - Conversion failure: Shows "Failed to import SVG: [error]"
@@ -265,6 +292,7 @@ The application will start at: **http://localhost:3000/**
 ## Important Notes
 
 ### MathJax Patches
+
 The project includes patches for MathJax to fix strict-mode compatibility. These patches must be reapplied after running `yarn install`:
 
 ```bash
@@ -274,14 +302,18 @@ npx patch-package --patch-dir patches
 **Why?** The `postinstall` script in package.json should auto-apply patches, but it fails with Node v25 due to engine version checks. Manual application is required.
 
 ### Browser Cache
+
 After code changes, do a **hard refresh**:
+
 - Mac: Cmd+Shift+R
 - Windows/Linux: Ctrl+Shift+R
 
 This ensures the browser loads the latest code, especially after applying MathJax patches.
 
 ### Node Version
+
 The project expects Node v18-20. If using Node v25:
+
 - Use `--ignore-engines` flag with yarn/npm
 - Manually apply patches after installation
 - Some warning messages are expected but can be ignored
@@ -289,6 +321,7 @@ The project expects Node v18-20. If using Node v25:
 ## Architecture Details
 
 ### Import Flow
+
 1. User triggers action (menu or keyboard)
 2. Action creates hidden `<input type="file">` element
 3. User selects .svg file
@@ -299,12 +332,14 @@ The project expects Node v18-20. If using Node v25:
 8. Elements are selected and toast notification shown
 
 ### Error Handling
+
 - **Conversion errors**: Extracted from `errors` NodeList, displayed in toast
 - **Empty results**: Checked before adding to canvas
 - **Parse errors**: Caught and displayed with error message
 - **Cleanup**: Input element removed in finally block
 
 ### Type Safety
+
 - TypeScript types ensure compatibility
 - ActionName, ShortcutName extended to include "importSVG"
 - Handles both string and object return types from converter
@@ -312,9 +347,11 @@ The project expects Node v18-20. If using Node v25:
 ## Testing
 
 ### Test SVG Files
+
 Create simple test files to verify functionality:
 
 **test-circle.svg**:
+
 ```svg
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <circle cx="50" cy="50" r="40" fill="blue" stroke="navy" stroke-width="2"/>
@@ -322,6 +359,7 @@ Create simple test files to verify functionality:
 ```
 
 **test-shapes.svg**:
+
 ```svg
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <circle cx="50" cy="50" r="40" fill="blue"/>
@@ -331,6 +369,7 @@ Create simple test files to verify functionality:
 ```
 
 ### Expected Behavior
+
 - ✅ SVG imported at viewport center
 - ✅ All elements grouped together
 - ✅ Elements selected after import
@@ -341,28 +380,29 @@ Create simple test files to verify functionality:
 ## Troubleshooting
 
 ### Error: "arguments.callee in strict mode"
-**Cause**: MathJax patches not applied
-**Solution**: Run `npx patch-package --patch-dir patches`
+
+**Cause**: MathJax patches not applied **Solution**: Run `npx patch-package --patch-dir patches`
 
 ### Error: "importSVG is not assignable to ActionName"
-**Cause**: TypeScript types not updated
-**Solution**: Verify changes to `actions/types.ts` and restart TypeScript server
+
+**Cause**: TypeScript types not updated **Solution**: Verify changes to `actions/types.ts` and restart TypeScript server
 
 ### Error: "svg-to-excalidraw not found"
-**Cause**: Local package not linked
-**Solution**: Verify svg-to-excalidraw exists at `../../../svg-to-excalidraw` and run `yarn install`
+
+**Cause**: Local package not linked **Solution**: Verify svg-to-excalidraw exists at `../../../svg-to-excalidraw` and run `yarn install`
 
 ### Import succeeds but elements not visible
-**Cause**: Elements positioned off-screen
-**Solution**: Check viewport zoom/position, elements should appear at center
+
+**Cause**: Elements positioned off-screen **Solution**: Check viewport zoom/position, elements should appear at center
 
 ### "No elements found in SVG"
-**Cause**: SVG file is empty or has no convertible elements
-**Solution**: Verify SVG file contains valid shapes/paths
+
+**Cause**: SVG file is empty or has no convertible elements **Solution**: Verify SVG file contains valid shapes/paths
 
 ## Future Enhancements
 
 Potential improvements:
+
 - [ ] Drag & drop SVG files onto canvas
 - [ ] Paste SVG from clipboard
 - [ ] Import options dialog (scale, position, grouping)

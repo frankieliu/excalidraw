@@ -42,6 +42,7 @@ npx patch-package --patch-dir patches
 ```
 
 **What the patches fix:**
+
 - Replaces `global` with `window` for browser compatibility
 - Fixes `arguments.callee` issues in strict mode
 - Converts `require()` to async `import()` for ES modules
@@ -53,7 +54,7 @@ Add the following to `excalidraw-app/vite.config.mts` in the `defineConfig()` ob
 ```typescript
 export default defineConfig({
   define: {
-    global: 'window',
+    global: "window",
   },
   // ... rest of config
 });
@@ -86,6 +87,7 @@ The app will be available at **http://localhost:3000/**
 ### Math Syntax
 
 **TeX/LaTeX format** (default):
+
 ```
 $E = mc^2$
 $\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
@@ -94,6 +96,7 @@ $\int_0^\pi \sin(x)\,dx = 2$
 ```
 
 **AsciiMath format** (toggle via action button):
+
 ```
 `x^2 + y^2 = r^2`
 `sqrt(x^2 + y^2)`
@@ -101,6 +104,7 @@ $\int_0^\pi \sin(x)\,dx = 2$
 ```
 
 **Keyboard shortcuts:**
+
 - `Shift+R` - Reset/toggle math mode settings
 
 ### Features
@@ -119,6 +123,7 @@ $\int_0^\pi \sin(x)\,dx = 2$
 **Cause:** Vite isn't replacing `global` with `window`, or patches aren't applied.
 
 **Fix:**
+
 1. Verify `vite.config.mts` has `define: { global: 'window' }`
 2. Run `npx patch-package --patch-dir patches`
 3. Clear cache: `rm -rf node_modules/.vite excalidraw-app/dist`
@@ -130,6 +135,7 @@ $\int_0^\pi \sin(x)\,dx = 2$
 **Cause:** MathJax patches not applied.
 
 **Fix:**
+
 ```bash
 npx patch-package --patch-dir patches
 rm -rf node_modules/.vite
@@ -139,6 +145,7 @@ cd excalidraw-app && npx vite --force
 ### Math not rendering
 
 **Solutions:**
+
 - Wait 10-15 seconds for MathJax to load on first use
 - Check browser console for errors
 - Try opening in Incognito/Private window
@@ -153,6 +160,7 @@ yarn install --ignore-engines
 ```
 
 Then apply patches manually:
+
 ```bash
 npx patch-package --patch-dir patches
 ```
@@ -169,6 +177,7 @@ npx patch-package --patch-dir patches
 ### Architecture
 
 Math support is implemented as a **text element subtype**:
+
 - Location: `packages/excalidraw/element/subtypes/mathjax/`
 - Components:
   - `implementation.tsx` - MathJax integration and rendering
@@ -189,6 +198,7 @@ The patch rewrites MathJax's legacy code to work in modern browser environments.
 ## Next Steps
 
 To contribute or test:
+
 1. Test various LaTeX formulas
 2. Try mixed text and math
 3. Test export functionality (PNG/SVG)

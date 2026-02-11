@@ -1,9 +1,11 @@
 import { vi } from "vitest";
+
+import { measureTextElement } from "@excalidraw/element";
+
 import { render } from "../../../tests/test-utils";
 import { API } from "../../../tests/helpers/api";
 import { Excalidraw } from "../../../index";
 
-import { measureTextElement } from "@excalidraw/element";
 import { ensureSubtypesLoaded } from "../../";
 import { getMathSubtypeRecord } from "../types";
 import { prepareMathSubtype } from "../implementation";

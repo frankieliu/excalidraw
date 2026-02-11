@@ -43,7 +43,7 @@ const result = svgToExcalidraw(svg);
 
 // 3. Add elements to canvas
 ea.importSVG(svg);
-ea.addToGroup(ea.getElements().map(el=>el.id));
+ea.addToGroup(ea.getElements().map((el) => el.id));
 await ea.addElementsToView(true, true, true, true);
 ```
 
@@ -59,6 +59,7 @@ yarn add svg-to-excalidraw
 ## Dependencies
 
 The library depends on:
+
 - `chroma-js` - Color manipulation
 - `gl-matrix` - Matrix operations for transforms
 - `nanoid` - ID generation
@@ -74,6 +75,7 @@ Total additional dependencies: ~6 packages, ~200KB uncompressed
 ### Phase 1: Basic Import (1-2 days)
 
 **Files to create/modify:**
+
 ```
 excalidraw-app/
 ├── components/
@@ -89,6 +91,7 @@ packages/excalidraw/
 ```
 
 **Steps:**
+
 1. Add `svg-to-excalidraw` dependency
 2. Create file upload dialog
 3. Add "Import SVG" menu item
@@ -98,14 +101,17 @@ packages/excalidraw/
 ### Phase 2: Enhanced Features (2-3 days)
 
 1. **Drag & Drop Support**
+
    - Accept .svg files dropped on canvas
    - Auto-position at drop location
 
 2. **Clipboard Paste**
+
    - Detect SVG content in clipboard
    - Auto-convert and paste as Excalidraw elements
 
 3. **Import Options Dialog**
+
    - Scale slider
    - Position (center/cursor/origin)
    - Grouping option
@@ -118,11 +124,13 @@ packages/excalidraw/
 ### Phase 3: Polish (1-2 days)
 
 1. **Preview Before Import**
+
    - Show thumbnail of SVG
    - Display element count
    - Estimated canvas size
 
 2. **Error Handling**
+
    - Better error messages
    - Partial import on errors
    - SVG validation
@@ -189,7 +197,7 @@ export async function importSVG(
     scale?: number;
     groupElements?: boolean;
     position?: { x: number; y: number };
-  } = {}
+  } = {},
 ) {
   const { hasErrors, errors, content } = svgToEx.convert(svgContent);
 
@@ -202,7 +210,7 @@ export async function importSVG(
 
   // Apply scale if specified
   if (options.scale && options.scale !== 1) {
-    elements.forEach(el => {
+    elements.forEach((el) => {
       el.x *= options.scale;
       el.y *= options.scale;
       el.width *= options.scale;
@@ -212,12 +220,12 @@ export async function importSVG(
 
   // Apply position offset
   if (options.position) {
-    const minX = Math.min(...elements.map(e => e.x));
-    const minY = Math.min(...elements.map(e => e.y));
+    const minX = Math.min(...elements.map((e) => e.x));
+    const minY = Math.min(...elements.map((e) => e.y));
     const offsetX = options.position.x - minX;
     const offsetY = options.position.y - minY;
 
-    elements.forEach(el => {
+    elements.forEach((el) => {
       el.x += offsetX;
       el.y += offsetY;
     });
@@ -226,7 +234,7 @@ export async function importSVG(
   // Group elements if requested
   if (options.groupElements) {
     const groupId = nanoid();
-    elements.forEach(el => {
+    elements.forEach((el) => {
       el.groupIds = [groupId];
     });
   }
@@ -262,8 +270,8 @@ export const actionImportSVG = register({
           groupElements: true,
           position: {
             x: appState.scrollX + appState.width / 2,
-            y: appState.scrollY + appState.height / 2
-          }
+            y: appState.scrollY + appState.height / 2,
+          },
         });
 
         app.updateScene({
@@ -272,9 +280,9 @@ export const actionImportSVG = register({
             selectedElementIds: newElements.reduce((acc, el) => {
               acc[el.id] = true;
               return acc;
-            }, {} as Record<string, true>)
+            }, {} as Record<string, true>),
           },
-          commitToHistory: true
+          commitToHistory: true,
         });
       } catch (error) {
         console.error("SVG import failed:", error);
@@ -335,6 +343,7 @@ export const actionImportSVG = register({
 Based on the svg-to-excalidraw library:
 
 ### 1. Not Supported:
+
 - Gradients (will be converted to solid colors)
 - Filters and effects (blur, shadow, etc.)
 - Animations
@@ -343,12 +352,14 @@ Based on the svg-to-excalidraw library:
 - Advanced SVG features
 
 ### 2. Partial Support:
+
 - Text (formatting may be simplified)
 - Complex transforms (may have accuracy issues)
 - Nested groups (flattened)
 - Stroke dash patterns (limited)
 
 ### 3. Well Supported:
+
 - Basic shapes (rect, circle, ellipse, path, line, polyline, polygon)
 - Colors (stroke, fill, opacity)
 - Stroke styles (width, basic dash)
@@ -378,12 +389,14 @@ The `svg-to-excalidraw` library hasn't been updated in ~2 years. Consider:
 ### Recommended Approach
 
 **Vendor the code** (copy into your repo):
+
 - The library is small and unmaintained
 - Obsidian already did this successfully
 - Gives you full control for fixes
 - Can optimize for Excalidraw's specific needs
 
 Location suggestion:
+
 ```
 packages/excalidraw/
 └── utils/
@@ -405,6 +418,7 @@ cp -r /Users/frankliu/Library/CloudStorage/Box-Box/Work/obsidian-excalidraw-plug
 ```
 
 Benefits:
+
 - Already tested and working
 - Any Obsidian-specific code can be removed
 - More recent maintenance than official library
@@ -417,6 +431,7 @@ Benefits:
 - **Cancellation** support for long operations
 
 Example lazy loading:
+
 ```typescript
 const importSVG = async (svg: string) => {
   const { default: svgToEx } = await import("svg-to-excalidraw");

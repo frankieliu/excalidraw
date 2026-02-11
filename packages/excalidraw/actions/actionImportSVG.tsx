@@ -1,12 +1,16 @@
-import { register } from "./register";
-import { t } from "../i18n";
 import { randomId, KEYS } from "@excalidraw/common";
-import type { ExcalidrawElement } from "@excalidraw/element/types";
+
 import { newElementWith } from "@excalidraw/element/mutateElement";
 import { CaptureUpdateAction } from "@excalidraw/element";
 
 // @ts-ignore - local package
 import svgToEx from "svg-to-excalidraw";
+
+import type { ExcalidrawElement } from "@excalidraw/element/types";
+
+import { t } from "../i18n";
+
+import { register } from "./register";
 
 export const actionImportSVG = register({
   name: "importSVG",
@@ -57,7 +61,8 @@ export const actionImportSVG = register({
         }
 
         // Parse the result
-        const result = typeof content === "string" ? JSON.parse(content) : content;
+        const result =
+          typeof content === "string" ? JSON.parse(content) : content;
         const importedElements: ExcalidrawElement[] = result.elements || [];
 
         if (importedElements.length === 0) {

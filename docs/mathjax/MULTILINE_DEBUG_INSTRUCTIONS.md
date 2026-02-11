@@ -7,6 +7,7 @@ I've added debug logging to help diagnose the multiline math issue.
 1. Make sure the dev server is running on http://localhost:3000
 2. Open the browser console (F12 or Cmd+Option+I)
 3. Load the test file:
+
    - Open http://localhost:3000
    - File menu -> Open
    - Navigate to /Users/frankliu/Documents/excalidraw/test-multiline-math.excalidraw
@@ -28,6 +29,7 @@ I've added debug logging to help diagnose the multiline math issue.
 ## Expected debug output:
 
 You should see:
+
 - Original text with newlines
 - The processed text after consumeMathNewlines
 - The array of lines

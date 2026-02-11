@@ -1,20 +1,8 @@
 import React from "react";
 import { updateActiveTool } from "@excalidraw/common";
-import { getShortcutKey } from "../shortcut";
-import { t } from "../i18n";
-import type { Action } from "../actions/types";
-import { makeCustomActionName } from "../actions/types";
+
 import clsx from "clsx";
-import type { Subtype, SubtypeRecord } from "../subtypes";
-import {
-  getSubtypeNames,
-  hasAlwaysEnabledActions,
-  isSubtypeAction,
-  isValidSubtype,
-  subtypeCollides,
-  getSubtypeMethods,
-} from "../subtypes";
-import type { ExcalidrawElement, Theme } from "@excalidraw/element/types";
+
 import {
   isTextElement,
   newElementWith,
@@ -24,13 +12,35 @@ import {
   getContainerElement,
   isBindableElement,
 } from "@excalidraw/element";
+
+import type { ExcalidrawElement, Theme } from "@excalidraw/element/types";
+
+import { getShortcutKey } from "../shortcut";
+import { t } from "../i18n";
+
+import { makeCustomActionName } from "../actions/types";
+
+import {
+  getSubtypeNames,
+  hasAlwaysEnabledActions,
+  isSubtypeAction,
+  isValidSubtype,
+  subtypeCollides,
+  getSubtypeMethods,
+} from "../subtypes";
+
 import {
   useExcalidrawActionManager,
   useExcalidrawContainer,
   useExcalidrawSetAppState,
 } from "./App";
-import type { ContextMenuItems } from "./ContextMenu";
+
 import { Island } from "./Island";
+
+import type { ContextMenuItems } from "./ContextMenu";
+
+import type { Subtype, SubtypeRecord } from "../subtypes";
+import type { Action } from "../actions/types";
 
 export const SubtypeButton = (
   subtype: Subtype,
@@ -105,42 +115,61 @@ export const SubtypeButton = (
             });
 
             // Use standard measurement for regular text
-            const container = getContainerElement(newElement, app.scene.getNonDeletedElementsMap());
+            const container = getContainerElement(
+              newElement,
+              app.scene.getNonDeletedElementsMap(),
+            );
             redrawTextBoundingBox(newElement, container, app.scene);
 
             return newElement;
-          } else {
-            // Add subtype - convert to math text
-            const customData = appState.customData?.[subtype] || {};
-            const newElement = newElementWith(el, {
-              subtype,
-              customData,
-            });
-
-            // Use subtype's measurement if available
-            const container = getContainerElement(newElement, app.scene.getNonDeletedElementsMap());
-
-            if (subtypeMethods?.measureText && subtypeMethods?.wrapText) {
-              const customMeasureFn = (text: string, font: string, lineHeight: number) => {
-                return subtypeMethods.measureText(newElement, {
-                  text,
-                  fontSize: newElement.fontSize,
-                });
-              };
-              const customWrapFn = (text: string, font: string, maxWidth: number) => {
-                return subtypeMethods.wrapText(newElement, maxWidth, {
-                  text,
-                  fontSize: newElement.fontSize,
-                });
-              };
-
-              redrawTextBoundingBox(newElement, container, app.scene, customMeasureFn, customWrapFn);
-            } else {
-              redrawTextBoundingBox(newElement, container, app.scene);
-            }
-
-            return newElement;
           }
+          // Add subtype - convert to math text
+          const customData = appState.customData?.[subtype] || {};
+          const newElement = newElementWith(el, {
+            subtype,
+            customData,
+          });
+
+          // Use subtype's measurement if available
+          const container = getContainerElement(
+            newElement,
+            app.scene.getNonDeletedElementsMap(),
+          );
+
+          if (subtypeMethods?.measureText && subtypeMethods?.wrapText) {
+            const customMeasureFn = (
+              text: string,
+              font: string,
+              lineHeight: number,
+            ) => {
+              return subtypeMethods.measureText(newElement, {
+                text,
+                fontSize: newElement.fontSize,
+              });
+            };
+            const customWrapFn = (
+              text: string,
+              font: string,
+              maxWidth: number,
+            ) => {
+              return subtypeMethods.wrapText(newElement, maxWidth, {
+                text,
+                fontSize: newElement.fontSize,
+              });
+            };
+
+            redrawTextBoundingBox(
+              newElement,
+              container,
+              app.scene,
+              customMeasureFn,
+              customWrapFn,
+            );
+          } else {
+            redrawTextBoundingBox(newElement, container, app.scene);
+          }
+
+          return newElement;
         });
 
         return {
@@ -196,7 +225,9 @@ export const SubtypeButton = (
       const selectedTextElements = elements.filter(
         (el) => appState.selectedElementIds[el.id] && isTextElement(el),
       );
-      const hasSelectedMathText = selectedTextElements.some((el) => el.subtype === subtype);
+      const hasSelectedMathText = selectedTextElements.some(
+        (el) => el.subtype === subtype,
+      );
 
       // Check if any selected containers have bound text with this subtype
       // Build elementsMap from elements array
@@ -214,12 +245,15 @@ export const SubtypeButton = (
       });
 
       // Determine if button should be selected
-      const isSelected = hasSelectedMathText ||
+      const isSelected =
+        hasSelectedMathText ||
         selectedContainersWithMathText ||
-        (appState.activeSubtypes !== undefined && appState.activeSubtypes.includes(subtype));
+        (appState.activeSubtypes !== undefined &&
+          appState.activeSubtypes.includes(subtype));
 
       // Update tooltip based on context
-      const hasTextSelection = selectedTextElements.length > 0 || selectedContainersWithMathText;
+      const hasTextSelection =
+        selectedTextElements.length > 0 || selectedContainersWithMathText;
       const baseLabel = t(`toolBar.${subtype}` as any);
       const tooltipText = hasTextSelection
         ? `Toggle ${baseLabel}${title}`
@@ -227,11 +261,15 @@ export const SubtypeButton = (
 
       return (
         <button
-          className={clsx("ToolIcon_type_button", "ToolIcon_type_button--show", {
-            ToolIcon: true,
-            "ToolIcon--selected": isSelected,
-            "ToolIcon--plain": true,
-          })}
+          className={clsx(
+            "ToolIcon_type_button",
+            "ToolIcon_type_button--show",
+            {
+              ToolIcon: true,
+              "ToolIcon--selected": isSelected,
+              "ToolIcon--plain": true,
+            },
+          )}
           title={tooltipText}
           aria-label={t(`toolBar.${subtype}` as any)}
           onClick={() => {
@@ -338,7 +376,7 @@ export const SubtypeShapeActions = (props: {
   const elements = am.getElementsIncludingDeleted();
   const appState = am.getAppState();
   const subtypeActions = Object.values(am.actions).filter((action) =>
-    isSubtypeAction(action, elements, appState, am.app)
+    isSubtypeAction(action, elements, appState, am.app),
   );
   return (
     <>

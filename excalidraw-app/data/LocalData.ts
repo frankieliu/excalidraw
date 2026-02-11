@@ -336,11 +336,16 @@ export class FileHandleStorage {
   }
 
   /**
-   * Verify if the stored file handle is still valid and request permissions if needed
+   * Verify if the stored file handle is still valid
+   * NOTE: Only queries permission, does not request it (requires user activation)
    * @param handle - The FileSystemFileHandle to verify
+   * @param requestIfNeeded - If true, will request permission (requires user gesture)
    * @returns Promise that resolves to the permission status
    */
-  static async verifyHandlePermission(handle: FileSystemFileHandle): Promise<{
+  static async verifyHandlePermission(
+    handle: FileSystemFileHandle,
+    requestIfNeeded = false,
+  ): Promise<{
     granted: boolean;
     permission: PermissionState;
     error?: Error;
@@ -366,18 +371,25 @@ export class FileHandleStorage {
         return { granted: true, permission };
       }
 
-      if (permission === "prompt") {
-        // Request permission from user
-        const newPermission = await handleWithPermissions.requestPermission({
-          mode: "readwrite",
-        });
-        return {
-          granted: newPermission === "granted",
-          permission: newPermission,
-        };
+      // Only request permission if explicitly requested AND permission is "prompt"
+      // This requires user activation (must be called in response to user gesture)
+      if (requestIfNeeded && permission === "prompt") {
+        try {
+          const newPermission = await handleWithPermissions.requestPermission({
+            mode: "readwrite",
+          });
+          return {
+            granted: newPermission === "granted",
+            permission: newPermission,
+          };
+        } catch (error) {
+          // Request failed (likely no user activation)
+          console.warn("Permission request failed:", error);
+          return { granted: false, permission: "prompt" };
+        }
       }
 
-      // Permission denied
+      // Permission is either "denied" or "prompt" (and we're not requesting)
       return { granted: false, permission };
     } catch (error) {
       console.error("Failed to verify file handle permission:", error);
@@ -391,6 +403,7 @@ export class FileHandleStorage {
 
   /**
    * Restore file handle from storage and verify permissions
+   * Only restores handles with "granted" permission on page load
    * @returns Promise that resolves to verified handle or null
    */
   static async restoreHandle(): Promise<{
@@ -404,14 +417,27 @@ export class FileHandleStorage {
       return { handle: null, granted: false, needsCleanup: false };
     }
 
-    const verification = await FileHandleStorage.verifyHandlePermission(handle);
+    // Only query permission, don't request (page load = no user activation)
+    const verification =
+      await FileHandleStorage.verifyHandlePermission(handle, false);
 
-    if (!verification.granted) {
-      // Permission denied or error - clear the stale handle
+    if (verification.permission === "granted") {
+      // Permission already granted - can use the handle
+      return { handle, granted: true, needsCleanup: false };
+    }
+
+    if (verification.permission === "denied") {
+      // Permission explicitly denied - clear stale handle
       await FileHandleStorage.clearHandle();
       return { handle: null, granted: false, needsCleanup: true };
     }
 
-    return { handle, granted: true, needsCleanup: false };
+    // Permission is "prompt" - can't restore without user activation
+    // User will need to reopen the file
+    console.info(
+      "File handle found but permission needs to be re-granted. Please reopen the file.",
+    );
+    await FileHandleStorage.clearHandle();
+    return { handle: null, granted: false, needsCleanup: true };
   }
 }

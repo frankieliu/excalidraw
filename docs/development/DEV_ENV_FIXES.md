@@ -117,6 +117,7 @@ The TypeScript checker is disabled in development mode. If you see TypeScript er
 3. Restart the server
 
 You can still run TypeScript checks manually:
+
 ```bash
 yarn test:typecheck
 ```
@@ -124,11 +125,13 @@ yarn test:typecheck
 ## Testing Your Features
 
 ### SVG Import
+
 - **Keyboard shortcut**: `Ctrl/Cmd + Shift + I`
 - **Menu**: File → Import SVG
 - **Action file**: `packages/excalidraw/actions/actionImportSVG.tsx`
 
 ### Excalidraw File Import
+
 - **Keyboard shortcut**: `Ctrl/Cmd + Shift + X`
 - **Menu**: File → Import Excalidraw
 - **Action file**: `packages/excalidraw/actions/actionImportExcalidraw.tsx`
@@ -138,6 +141,7 @@ yarn test:typecheck
 ### Issue: Server starts on port 3001 instead of 3000
 
 **Solution**: Create or update `.env.development.local`:
+
 ```bash
 echo "VITE_APP_PORT=3000" > .env.development.local
 ```
@@ -145,6 +149,7 @@ echo "VITE_APP_PORT=3000" > .env.development.local
 ### Issue: Module not found or export errors
 
 **Solution**: Clear Vite cache:
+
 ```bash
 rm -rf excalidraw-app/node_modules/.vite node_modules/.vite
 ```
@@ -152,12 +157,14 @@ rm -rf excalidraw-app/node_modules/.vite node_modules/.vite
 ### Issue: TypeScript errors in test files showing in browser
 
 **Solution**: This is expected with the current setup. The error is in test files, not your app. You can:
+
 1. Ignore it (it doesn't affect the app)
 2. Or ensure `typescript: false` in `vite.config.mts`
 
 ### Issue: Babel plugin missing errors
 
 **Solution**: Ensure `patch-package` is installed globally:
+
 ```bash
 yarn global add patch-package
 yarn install --ignore-engines
@@ -176,6 +183,7 @@ Make sure these files have the correct settings:
 If you need to revert to the original setup:
 
 1. **Re-enable TypeScript checker**:
+
    ```bash
    cd excalidraw-app
    git checkout vite.config.mts
@@ -197,11 +205,13 @@ If you need to revert to the original setup:
 ## When to Rebuild Packages
 
 You need to rebuild the excalidraw package when you:
+
 - Modify files in `packages/excalidraw/`
 - Add new exports to `packages/excalidraw/index.tsx`
 - Change TypeScript types that are used by the app
 
 Run:
+
 ```bash
 yarn build:excalidraw
 ```
@@ -210,5 +220,4 @@ Then clear Vite cache and restart the server.
 
 ---
 
-**Last Updated**: 2026-02-07
-**Status**: Development server running on http://127.0.0.1:3000/
+**Last Updated**: 2026-02-07 **Status**: Development server running on http://127.0.0.1:3000/

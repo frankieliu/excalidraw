@@ -5,6 +5,7 @@ Analysis of features from the Obsidian Excalidraw plugin that could be useful fo
 ## SVG Import Feature
 
 ### Implementation Location
+
 - **Dialog**: `src/shared/Dialogs/ImportSVGDialog.ts`
 - **Core Library**: `src/shared/svgToExcalidraw/`
 - **API Method**: `ExcalidrawAutomate.importSVG(svgString)`
@@ -26,10 +27,12 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
 ### SVG-to-Excalidraw Library
 
 **Source**: https://github.com/excalidraw/svg-to-excalidraw
+
 - **Note**: This is an official Excalidraw library but hasn't been maintained in over a year
 - **Implementation**: Embedded directly into the Obsidian plugin for smaller bundle size
 
 **Key Files**:
+
 - `walker.ts` - Main SVG traversal/parsing
 - `parser.ts` - SVG string parsing
 - `transform.ts` - Coordinate transformations
@@ -37,6 +40,7 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
 - `elements/` - Converters for different SVG elements (path, rect, circle, etc.)
 
 ### Features
+
 - Converts SVG paths, shapes, and text to Excalidraw elements
 - Preserves colors, stroke widths, and fill styles
 - Groups imported elements automatically
@@ -61,30 +65,35 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
 ## Other Valuable Features from Obsidian Plugin
 
 ### 1. **PDF Import** ✨
+
 - **Files**: `InsertPDFModal.ts`, PDF handling utilities
 - **What it does**: Imports PDFs as images (page by page)
 - **Use case**: Technical diagrams, documentation references
 - **Implementation**: Converts PDF pages to images, then inserts into canvas
 
 ### 2. **LaTeX Formula Support** ✨✨
+
 - **Already implemented in your math branch!**
 - Obsidian plugin uses a similar approach with MathJax
 - Can insert formulas via command palette
 - Edit formulas with CTRL+Click
 
 ### 3. **Image OCR (Text Extraction)**
+
 - **Files**: OCR-related utilities
 - **What it does**: Extract text from images on canvas
 - **Use case**: Convert screenshots/photos with text into editable text
 - **Tech**: Uses Tesseract.js or similar OCR engines
 
 ### 4. **Custom Color Palettes**
+
 - **Configuration**: Template-based color palette customization
 - **What it does**: Define custom color sets for stroke, fill, and background
 - **Use case**: Branding, theme consistency, workflow optimization
 - **Format**: JSON config in template file
 
 ### 5. **Auto-Export to PNG/SVG**
+
 - **Files**: `ExportDialog.ts`, export utilities
 - **What it does**: Automatically export drawings on save
 - **Features**:
@@ -94,6 +103,7 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
   - Frontmatter-based export control
 
 ### 6. **Script Engine / Automation** ✨✨✨
+
 - **Files**: `ExcalidrawAutomate.ts` (extensive API)
 - **What it does**: JavaScript API for programmatic drawing manipulation
 - **Features**:
@@ -108,16 +118,19 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
   - Workflow automation
 
 ### 7. **Fourth Font Support**
+
 - **What it does**: Add custom fonts beyond the standard 3
 - **Implementation**: Custom font loading and registration
 - **Use case**: Branding, specialized typography
 
 ### 8. **Sticky Notes (Word Wrapping)**
+
 - **What it does**: Auto-wrap text to fit container
 - **Features**: Configurable wrap width, dynamic sizing
 - **Use case**: Better note-taking experience
 
 ### 9. **Markdown Embeds**
+
 - **What it does**: Embed Markdown content into drawings
 - **Features**:
   - Live preview
@@ -126,6 +139,7 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
 - **Use case**: Integration with knowledge bases
 
 ### 10. **Link Management**
+
 - **Features**:
   - Automatic link updates when files move
   - Backlinks tracking
@@ -134,6 +148,7 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
 - **Implementation**: Deep integration with Obsidian's link system
 
 ### 11. **Custom Pen Support**
+
 - **Files**: `PenSettingsModal.ts`, pen-related types
 - **What it does**: Configure tablet/stylus pen behavior
 - **Features**:
@@ -142,11 +157,13 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
   - Custom pen tool configurations
 
 ### 12. **Image Anchoring**
+
 - **What it does**: Pin images at 100% size
 - **Use case**: Composite drawings from multiple files
 - **Behavior**: Resets image size on reload/update
 
 ### 13. **Mobile Optimizations**
+
 - Camera integration (iOS/Android)
 - Touch gesture improvements
 - Mobile-specific UI adjustments
@@ -158,12 +175,14 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
 ### High Priority ⭐⭐⭐
 
 1. **SVG Import**
+
    - Widely requested feature
    - Existing library available
    - Enables workflow from other tools (Figma, Inkscape, etc.)
    - Relatively straightforward to implement
 
 2. **Script/Automation API**
+
    - Powerful extensibility
    - Enables advanced use cases
    - Community-driven innovation
@@ -178,11 +197,13 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
 ### Medium Priority ⭐⭐
 
 4. **Auto-Export (PNG/SVG)**
+
    - Good for publishing workflows
    - Integration with CI/CD
    - Keep-in-sync functionality
 
 5. **PDF Import**
+
    - Useful for technical documentation
    - Requires PDF parsing library
    - Large bundle size consideration
@@ -204,6 +225,7 @@ async onChooseItem(item: TFile, _: KeyboardEvent): Promise<void> {
 ## SVG Import Implementation Plan
 
 ### Phase 1: Core Integration
+
 ```bash
 # 1. Add svg-to-excalidraw dependency
 npm install @excalidraw/svg-to-excalidraw
@@ -219,12 +241,14 @@ npm install @excalidraw/svg-to-excalidraw
 ```
 
 ### Phase 2: Enhanced Features
+
 - Drag & drop support for .svg files
 - Clipboard paste support
 - Import from URL
 - Import settings (scale, position, grouping options)
 
 ### Phase 3: Advanced
+
 - Preview before import
 - Multi-file import
 - Batch processing
@@ -241,7 +265,7 @@ npm install @excalidraw/svg-to-excalidraw
 const svg = await readSVGFile(filePath);
 const result = svgToExcalidraw(svg);
 
-if(result.hasErrors) {
+if (result.hasErrors) {
   showError(`Parsing errors: ${result.errors}`);
   return;
 }
@@ -249,22 +273,20 @@ if(result.hasErrors) {
 // Add elements to canvas
 const elements = result.elements;
 const groupId = createGroupId();
-elements.forEach(el => el.groupIds = [groupId]);
+elements.forEach((el) => (el.groupIds = [groupId]));
 
 // Add to view with options
-addElementsToCanvas(
-  elements,
-  {
-    autoZoom: true,
-    autoSelect: true,
-    animate: true
-  }
-);
+addElementsToCanvas(elements, {
+  autoZoom: true,
+  autoSelect: true,
+  animate: true,
+});
 ```
 
 ### Available in Main Excalidraw Repo
 
 Check if `svg-to-excalidraw` is already available:
+
 ```bash
 cd /Users/frankliu/Work/excalidraw
 npm search @excalidraw/svg-to-excalidraw

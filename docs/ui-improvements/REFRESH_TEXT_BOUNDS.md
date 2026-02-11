@@ -27,14 +27,17 @@ The "Refresh Text Bounds" feature provides a manual way to force recalculation o
 ### Files Modified
 
 1. **`packages/excalidraw/actions/actionTextAutoResize.ts`**
+
    - Added `actionRefreshTextBounds` action
    - Imports `redrawTextBoundingBox`, `hasBoundTextElement`, `getBoundTextElement`
    - Iterates through all elements and refreshes text bounding boxes
 
 2. **`packages/excalidraw/actions/index.ts`**
+
    - Exported `actionRefreshTextBounds` from `actionTextAutoResize`
 
 3. **`packages/excalidraw/locales/en.json`**
+
    - Added label: `"refreshTextBounds": "Refresh all text bounds"`
    - Added stats section: `"textTools": "Text Tools"`
 
@@ -54,9 +57,7 @@ export const actionRefreshTextBounds = register({
   predicate: (_elements, appState, _props, app) => {
     // Only show when there are text elements in the scene
     const elements = app.scene.getNonDeletedElements();
-    return elements.some(
-      (el) => isTextElement(el) || hasBoundTextElement(el),
-    );
+    return elements.some((el) => isTextElement(el) || hasBoundTextElement(el));
   },
   perform: (_elements, appState, _, app) => {
     const scene = app.scene;
@@ -93,25 +94,27 @@ export const actionRefreshTextBounds = register({
 The button appears in the Stats panel (Properties sidebar) under the "Text Tools" section:
 
 ```typescript
-{actionManager.isActionEnabled(actionRefreshTextBounds) && (
-  <>
-    <StatsRow heading>{t("stats.textTools")}</StatsRow>
-    <StatsRow>
-      <button
-        className="exc-button exc-button--outlined"
-        onClick={() => {
-          actionManager.executeAction(actionRefreshTextBounds);
-        }}
-        style={{
-          width: "100%",
-          marginTop: "0.25rem",
-        }}
-      >
-        {t("labels.refreshTextBounds")}
-      </button>
-    </StatsRow>
-  </>
-)}
+{
+  actionManager.isActionEnabled(actionRefreshTextBounds) && (
+    <>
+      <StatsRow heading>{t("stats.textTools")}</StatsRow>
+      <StatsRow>
+        <button
+          className="exc-button exc-button--outlined"
+          onClick={() => {
+            actionManager.executeAction(actionRefreshTextBounds);
+          }}
+          style={{
+            width: "100%",
+            marginTop: "0.25rem",
+          }}
+        >
+          {t("labels.refreshTextBounds")}
+        </button>
+      </StatsRow>
+    </>
+  );
+}
 ```
 
 ## How It Works
@@ -145,6 +148,7 @@ The button appears in the Stats panel (Properties sidebar) under the "Text Tools
 ### When to Use
 
 Use this feature when:
+
 - Text appears clipped or truncated
 - After opening older Excalidraw files
 - Math elements (MathJax) don't render with correct bounding boxes
@@ -158,10 +162,12 @@ Use this feature when:
 The feature refreshes bounding boxes for:
 
 1. **Standalone text elements**
+
    - Free-floating text on the canvas
    - Text not bound to any container
 
 2. **Text within containers**
+
    - Text inside rectangles, ellipses, diamonds, etc.
    - Labels on arrows
    - Any bound text element
@@ -173,6 +179,7 @@ The feature refreshes bounding boxes for:
 ### What Gets Recalculated
 
 For each text element:
+
 - Text width based on font, size, and content
 - Text height based on line count and line height
 - Text wrapping based on container constraints
@@ -219,6 +226,7 @@ This feature works in conjunction with:
 ### Manual Testing Steps
 
 1. **Create test scenario**:
+
    ```
    - Create several text elements (standalone and in containers)
    - Add some MathJax equations (if available)
@@ -226,12 +234,14 @@ This feature works in conjunction with:
    ```
 
 2. **Trigger refresh**:
+
    ```
    - Open Stats panel
    - Click "Refresh all text bounds"
    ```
 
 3. **Verify results**:
+
    ```
    - Check that text is no longer clipped
    - Verify containers expanded if needed
@@ -258,18 +268,22 @@ This feature works in conjunction with:
 ## Troubleshooting
 
 ### Button doesn't appear
+
 - **Cause**: No text elements in the scene
 - **Solution**: Add a text element or open a file with text
 
 ### Text still appears clipped after refresh
+
 - **Cause**: Font loading issue or browser rendering bug
 - **Solution**: Try reloading the page, then refresh again
 
 ### Performance issues
+
 - **Cause**: Too many text elements (hundreds+)
 - **Solution**: Break scene into multiple files or use selective editing
 
 ### Containers don't expand
+
 - **Cause**: Arrow labels don't expand containers (by design)
 - **Solution**: Manual resize or convert arrow to another shape type
 
@@ -282,5 +296,4 @@ This feature works in conjunction with:
 
 ---
 
-**Status**: ✅ Implemented and ready for use
-**Version**: Excalidraw Fork (2026-02-09)
+**Status**: ✅ Implemented and ready for use **Version**: Excalidraw Fork (2026-02-09)

@@ -17,6 +17,7 @@ if (mathProps.useTex || !mathProps.mathOnly) {
 ## Scenarios:
 
 ### mathOnly: false (mixed mode) ✅ WORKS
+
 - Text: `$x$\n$y$\n$z$`
 - After splitMath: `["", "x", "\n", "y", "\n", "z", ""]`
 - Loop replaces newlines only at ODD indices (math segments)
@@ -24,6 +25,7 @@ if (mathProps.useTex || !mathProps.mathOnly) {
 - Result: `\(x\)\n\(y\)\n\(z\)` → 3 lines
 
 ### mathOnly: true ❌ BROKEN
+
 - Text: `x\ny\nz` (no delimiters needed)
 - After splitMath: `["x\ny\nz"]` (treated as one math segment)
 - Loop replaces newlines at ALL indices (because mathOnly=true)
@@ -40,5 +42,6 @@ The fix is to change the condition to NEVER replace newlines when we want multil
 ## Question for User
 
 Which mode are you using when creating the multiline math?
+
 - mathOnly: false (need $ delimiters for each expression)
 - mathOnly: true (entire text is math, no delimiters needed)

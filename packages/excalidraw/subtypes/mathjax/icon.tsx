@@ -1,4 +1,5 @@
 import type { Theme } from "@excalidraw/element/types";
+
 import { createIcon, iconFillColor } from "../../components/icons";
 
 // We inline font-awesome icons in order to save on js size rather than including the font awesome react library

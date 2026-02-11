@@ -5,6 +5,7 @@ Your changes have been committed locally. Here's how to push them to your own fo
 ## Current Status
 
 ✅ **Committed changes:**
+
 - `excalidraw-app/vite.config.mts` - Added global polyfill
 - `MATH_SETUP.md` - Detailed setup documentation
 - `QUICKSTART_MATH.md` - Quick start guide
@@ -48,6 +49,7 @@ git remote -v
 ```
 
 You should see:
+
 ```
 origin  https://github.com/excalidraw/excalidraw.git (fetch)
 origin  https://github.com/excalidraw/excalidraw.git (push)
@@ -80,6 +82,7 @@ git push fork math-with-vite-fix
 ## Verify Your Push
 
 After pushing, visit your fork on GitHub:
+
 - Go to `https://github.com/YOUR_USERNAME/excalidraw`
 - Switch to the `danieljgeiger-mathjax` branch
 - You should see your commit: "fix: add global polyfill to vite config..."
@@ -89,6 +92,7 @@ After pushing, visit your fork on GitHub:
 ### Share Your Work
 
 You can share your fork with others by giving them:
+
 ```
 https://github.com/YOUR_USERNAME/excalidraw/tree/danieljgeiger-mathjax
 ```
@@ -126,10 +130,12 @@ gh pr create --base danieljgeiger-mathjax --head YOUR_USERNAME:danieljgeiger-mat
 ## Troubleshooting
 
 **Permission denied (publickey)**
+
 - Your SSH keys may not be set up
 - Try HTTPS: `git remote set-url fork https://github.com/YOUR_USERNAME/excalidraw.git`
 
 **Already have a fork?**
+
 ```bash
 # Just add it as remote and push
 git remote add fork https://github.com/YOUR_USERNAME/excalidraw.git
@@ -137,6 +143,7 @@ git push fork danieljgeiger-mathjax
 ```
 
 **Wrong remote?**
+
 ```bash
 # Check current remote
 git remote -v

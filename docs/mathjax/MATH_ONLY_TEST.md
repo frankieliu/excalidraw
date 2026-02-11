@@ -12,6 +12,7 @@ Since you're seeing the multiline math rendering logs but not the Math Only cont
 ## What to Look For
 
 In the properties panel (left side), you should see:
+
 - Stroke (color)
 - Background (color)
 - Fill style
@@ -27,6 +28,7 @@ In the properties panel (left side), you should see:
 ## If You Still Don't See It
 
 Try refreshing the page and check the console immediately when you select a math element. You should see:
+
 ```
 [MATH DEBUG] changeMathOnly predicate: true selected math elements: 1
 ```
@@ -36,9 +38,12 @@ If you see `predicate: false`, then the element isn't being recognized as a math
 ## Manual Check
 
 In the console, paste this to check if your element is properly recognized:
+
 ```javascript
-const app = window.EXCALIDRAW_ASSET_PATH ? null : document.querySelector('.excalidraw-wrapper');
-console.log('Found app wrapper:', !!app);
+const app = window.EXCALIDRAW_ASSET_PATH
+  ? null
+  : document.querySelector(".excalidraw-wrapper");
+console.log("Found app wrapper:", !!app);
 ```
 
 Let me know what you find!

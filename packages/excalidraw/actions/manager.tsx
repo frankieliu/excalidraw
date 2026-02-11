@@ -146,7 +146,10 @@ export class ActionManager {
   /**
    * @param data additional data sent to the PanelComponent
    */
-  renderAction = (name: ActionName | CustomActionName, data?: PanelComponentProps["data"]) => {
+  renderAction = (
+    name: ActionName | CustomActionName,
+    data?: PanelComponentProps["data"],
+  ) => {
     const canvasActions = this.app.props.UIOptions.canvasActions;
 
     if (
@@ -162,7 +165,12 @@ export class ActionManager {
       if (action.predicate) {
         const elements = this.getElementsIncludingDeleted();
         const appState = this.getAppState();
-        const predicateResult = action.predicate(elements, appState, this.app.props, this.app);
+        const predicateResult = action.predicate(
+          elements,
+          appState,
+          this.app.props,
+          this.app,
+        );
         if (!predicateResult) {
           return null;
         }

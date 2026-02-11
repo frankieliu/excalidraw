@@ -1,17 +1,5 @@
 import { useEffect } from "react";
-import type { AppState, ExcalidrawImperativeAPI, ToolType } from "../types";
-import type { LangLdr } from "../i18n";
-import { registerCustomLangData } from "../i18n";
 
-import type {
-  Action,
-  ActionName,
-  ActionPredicateFn,
-  CustomActionName,
-} from "../actions/types";
-import { makeCustomActionName } from "../actions/types";
-import { registerCustomShortcuts } from "../actions/shortcuts";
-import { register } from "../actions/register";
 import {
   hasBoundTextElement,
   isTextElement,
@@ -19,16 +7,36 @@ import {
   getContainerElement,
   redrawTextBoundingBox,
   ShapeCache,
-  Scene,
   getNonDeletedElements,
   getSelectedElements,
 } from "@excalidraw/element";
+
+import type { Scene } from "@excalidraw/element";
+
 import type {
   ElementsMap,
   ExcalidrawElement,
   ExcalidrawTextElement,
   NonDeleted,
 } from "@excalidraw/element/types";
+
+import { registerCustomLangData } from "../i18n";
+
+import { makeCustomActionName } from "../actions/types";
+
+import { registerCustomShortcuts } from "../actions/shortcuts";
+
+import { register } from "../actions/register";
+
+import type { AppState, ExcalidrawImperativeAPI, ToolType } from "../types";
+import type { LangLdr } from "../i18n";
+
+import type {
+  Action,
+  ActionName,
+  ActionPredicateFn,
+  CustomActionName,
+} from "../actions/types";
 
 // Use "let" instead of "const" so we can dynamically add subtypes
 let subtypeNames: readonly Subtype[] = [];

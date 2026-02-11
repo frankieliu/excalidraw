@@ -1,10 +1,13 @@
-import { register } from "./register";
-import { t } from "../i18n";
 import { KEYS } from "@excalidraw/common";
-import { isValidExcalidrawData } from "../data/json";
+
 import { getCommonBounds } from "@excalidraw/element/bounds";
 import { getNonDeletedElements } from "@excalidraw/element";
 import { CaptureUpdateAction } from "@excalidraw/element";
+
+import { isValidExcalidrawData } from "../data/json";
+import { t } from "../i18n";
+
+import { register } from "./register";
 
 export const actionImportExcalidraw = register({
   name: "importExcalidraw",
@@ -76,7 +79,10 @@ export const actionImportExcalidraw = register({
 
         if (existingElements.length === 0) {
           // No existing elements, use viewport center
-          targetPosition = { clientX: viewportCenterX, clientY: viewportCenterY };
+          targetPosition = {
+            clientX: viewportCenterX,
+            clientY: viewportCenterY,
+          };
         } else {
           // Get bounds of existing elements
           const existingBounds = getCommonBounds(existingElements);

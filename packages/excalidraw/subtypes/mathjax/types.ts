@@ -1,4 +1,5 @@
 import { getShortcutKey } from "../../shortcut";
+
 import type { SubtypeRecord } from "../";
 
 // Exports

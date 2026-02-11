@@ -549,7 +549,12 @@ const drawElementOnCanvas = (
         if (element.subtype && renderConfig.getSubtypeMethods) {
           const methods = renderConfig.getSubtypeMethods(element.subtype);
           if (methods?.render) {
-            methods.render(element, renderConfig.elementsMap, context, renderConfig);
+            methods.render(
+              element,
+              renderConfig.elementsMap,
+              context,
+              renderConfig,
+            );
             break;
           }
         }

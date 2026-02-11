@@ -13,23 +13,27 @@ In Excalidraw, actions with `PanelComponent` must be **explicitly rendered** in 
 Added `renderAction("changeMathOnly")` calls in two locations in `/packages/excalidraw/components/Actions.tsx`:
 
 ### 1. Main Properties Panel (line 231)
+
 ```tsx
-{(appState.activeTool.type === "text" ||
-  targetElements.some(isTextElement)) && (
-  <>
-    {renderAction("changeFontFamily")}
-    {renderAction("changeFontSize")}
-    {renderAction("changeMathOnly")}  // ← ADDED
-    {renderAction("changeTextAlign")}
-  </>
-)}
+{
+  (appState.activeTool.type === "text" ||
+    targetElements.some(isTextElement)) && (
+    <>
+      {renderAction("changeFontFamily")}
+      {renderAction("changeFontSize")}
+      {renderAction("changeMathOnly")} // ← ADDED
+      {renderAction("changeTextAlign")}
+    </>
+  );
+}
 ```
 
 ### 2. Compact/Popover View (line 598)
+
 ```tsx
 <div className="selected-shape-actions">
   {renderAction("changeFontSize")}
-  {renderAction("changeMathOnly")}  // ← ADDED
+  {renderAction("changeMathOnly")} // ← ADDED
   {renderAction("changeTextAlign")}
   {renderAction("changeVerticalAlign")}
 </div>
@@ -49,6 +53,7 @@ After the dev server reloads:
 ## Expected Logs
 
 When you select a math element, you should now see:
+
 ```
 [MATH DEBUG] changeMathOnly predicate: true selected math elements: 1
 [MATH DEBUG] changeMathOnly PanelComponent rendering
@@ -57,11 +62,13 @@ When you select a math element, you should now see:
 ## What Each Mode Does
 
 ### Mixed Text (mathOnly: false)
+
 - Text: `The equation $E = mc^2$ is famous`
 - Math needs delimiters: `$...$` or `\(...\)`
 - Can mix regular text with math expressions
 
 ### Math Only (mathOnly: true)
+
 - Text: `E = mc^2` (no delimiters needed)
 - Entire content is rendered as math
 - Simpler for pure equations
@@ -74,6 +81,7 @@ When you select a math element, you should now see:
 ## Next Steps
 
 Once confirmed working, we can:
+
 1. Remove all `[MATH DEBUG]` console.log statements
 2. Remove `[MULTILINE DEBUG]` console.log statements
 3. Commit and push the changes

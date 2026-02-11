@@ -17,11 +17,13 @@ By default, the development server runs on **port 3000** (overridden from the de
 Excalidraw uses environment variables to configure the Vite dev server port. The files are located in the project root:
 
 1. **`.env.development`** (line 30) - Base development configuration
+
    ```bash
    VITE_APP_PORT=3001
    ```
 
 2. **`.env.development.local`** (line 2) - **Local overrides (takes precedence)**
+
    ```bash
    VITE_APP_PORT=3000
    ```
@@ -31,6 +33,7 @@ Excalidraw uses environment variables to configure the Vite dev server port. The
 ### Order of Precedence
 
 Environment files are loaded in this order (later files override earlier ones):
+
 1. `.env.development` (base)
 2. `.env.development.local` (overrides base)
 
@@ -55,9 +58,11 @@ server: {
 All development commands use the same port configuration:
 
 ### `yarn dev`
+
 ```bash
 yarn dev
 ```
+
 - Script location: `package.json:72`
 - Runs: `bash start.sh` → `npx vite` in `excalidraw-app/`
 - Mode: `development`
@@ -65,9 +70,11 @@ yarn dev
 - URL: http://localhost:3000
 
 ### `yarn start`
+
 ```bash
 yarn start
 ```
+
 - Script location: `package.json:73`
 - Runs: `yarn --cwd ./excalidraw-app start`
 - Mode: `development` (same as `yarn dev`)
@@ -75,9 +82,11 @@ yarn start
 - URL: http://localhost:3000
 
 ### `yarn start:production`
+
 ```bash
 yarn start:production
 ```
+
 - Builds the app first, then serves static files
 - Mode: `production`
 - Uses production server (typically defaults to port 3000 or as configured)
@@ -96,11 +105,13 @@ VITE_APP_PORT=3001  # or any port you want
 ```
 
 **Pros**:
+
 - Personal local setting
 - Not committed to git
 - Won't affect other developers
 
 **Cons**:
+
 - Only applies to your machine
 
 ### Option 2: Edit `.env.development`
@@ -113,10 +124,12 @@ VITE_APP_PORT=3001
 ```
 
 **Pros**:
+
 - Changes default for all developers
 - Committed to git
 
 **Cons**:
+
 - Affects everyone on the team
 - May conflict with local overrides
 
@@ -129,10 +142,12 @@ VITE_APP_PORT=4000 yarn dev
 ```
 
 **Pros**:
+
 - No file changes
 - One-time use
 
 **Cons**:
+
 - Only applies to that single command
 - Must be set each time
 
@@ -156,6 +171,7 @@ Error: Port 3000 is already in use
 You have several options:
 
 1. **Stop the process using the port**:
+
    ```bash
    # Find the process
    lsof -ti:3000
@@ -166,8 +182,7 @@ You have several options:
 
 2. **Change to a different port** (using any method above)
 
-3. **Use Vite's automatic port selection**:
-   Vite will automatically try the next available port if the configured port is busy.
+3. **Use Vite's automatic port selection**: Vite will automatically try the next available port if the configured port is busy.
 
 ## Environment Variables Reference
 
@@ -176,7 +191,7 @@ You have several options:
 Located in `.env.development`:
 
 | Variable | Default | Purpose |
-|----------|---------|---------|
+| --- | --- | --- |
 | `VITE_APP_PORT` | 3001 (overridden to 3000) | Dev server port |
 | `VITE_APP_WS_SERVER_URL` | http://localhost:3002 | WebSocket server for collaboration |
 | `VITE_APP_PLUS_APP` | http://localhost:3000 | Excalidraw+ app URL |
@@ -186,17 +201,18 @@ Located in `.env.development`:
 
 When running the full development stack, these ports are used:
 
-| Port | Service |
-|------|---------|
+| Port | Service                          |
+| ---- | -------------------------------- |
 | 3000 | Main Excalidraw app (dev server) |
-| 3002 | Collaboration WebSocket server |
-| 3016 | AI backend (if running locally) |
+| 3002 | Collaboration WebSocket server   |
+| 3016 | AI backend (if running locally)  |
 
 ## Verification
 
 To verify which port your dev server is using:
 
 1. **Check the terminal output** when starting the server:
+
    ```
    VITE v5.0.12  ready in 482 ms
 
@@ -204,6 +220,7 @@ To verify which port your dev server is using:
    ```
 
 2. **Check your environment variables**:
+
    ```bash
    # From project root
    cat .env.development.local | grep PORT
@@ -243,14 +260,14 @@ The dev server is configured to auto-open the browser with the correct port. If 
 
 ## Related Files
 
-| File | Purpose |
-|------|---------|
-| `.env.development` | Base development environment variables |
-| `.env.development.local` | Local development overrides (gitignored) |
-| `.env.production` | Production environment variables |
-| `excalidraw-app/vite.config.mts` | Vite server configuration |
-| `start.sh` | Development server startup script |
-| `excalidraw-app/package.json` | NPM scripts for dev server |
+| File                             | Purpose                                  |
+| -------------------------------- | ---------------------------------------- |
+| `.env.development`               | Base development environment variables   |
+| `.env.development.local`         | Local development overrides (gitignored) |
+| `.env.production`                | Production environment variables         |
+| `excalidraw-app/vite.config.mts` | Vite server configuration                |
+| `start.sh`                       | Development server startup script        |
+| `excalidraw-app/package.json`    | NPM scripts for dev server               |
 
 ## See Also
 

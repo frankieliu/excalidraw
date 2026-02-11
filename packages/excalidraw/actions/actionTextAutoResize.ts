@@ -65,9 +65,7 @@ export const actionRefreshTextBounds = register({
   predicate: (_elements, appState, _props, app) => {
     // Only show when there are text elements in the scene
     const elements = app.scene.getNonDeletedElements();
-    return elements.some(
-      (el) => isTextElement(el) || hasBoundTextElement(el),
-    );
+    return elements.some((el) => isTextElement(el) || hasBoundTextElement(el));
   },
   perform: (_elements, appState, _, app) => {
     const scene = app.scene;

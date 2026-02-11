@@ -57,12 +57,14 @@ $\int_0^\infty e^{-x} dx$
 ## Troubleshooting
 
 **Error: `global is not defined`**
+
 - Make sure vite.config.mts has the `define: { global: 'window' }` line
 - Clear cache: `rm -rf node_modules/.vite`
 - Restart: `npx vite --force`
 - Hard refresh browser
 
 **Math not rendering**
+
 - Wait 10-15 seconds on first load
 - Check browser console for errors
 - Try incognito window

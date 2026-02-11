@@ -7,6 +7,7 @@ When implementing custom measurement functions for math text in containers, we e
 ### The Circular Dependency
 
 **Package Structure:**
+
 ```
 packages/
 ├── element/              # Core element types and utilities
@@ -21,17 +22,20 @@ packages/
 ```
 
 **The Problem:**
+
 - `textElement.ts` needs to call subtype-specific measurement functions
 - Subtype methods are registered in `excalidraw/subtypes/`
 - But `packages/element/` is a lower-level package that can't depend on `packages/excalidraw/`
 
 **If we had imported directly:**
+
 ```typescript
 // In packages/element/src/textElement.ts
 import { getSubtypeMethods } from "../../excalidraw/subtypes"; // ❌ CIRCULAR DEPENDENCY!
 ```
 
 This would create:
+
 ```
 element → excalidraw → element (circular!)
 ```
@@ -94,10 +98,11 @@ export const handleBindTextResize = (
 
   // Use wrapTextFn and measureTextFn throughout
   // ...
-}
+};
 ```
 
 **Key Points:**
+
 - Functions are **optional parameters** with default behavior
 - No imports from higher-level packages needed
 - Works for both regular text and subtypes
@@ -124,10 +129,10 @@ export const updateBoundElements = (
     scene,
     false,
     false,
-    options?.customMeasureFn,  // Forward to next layer
-    options?.customWrapFn,     // Forward to next layer
+    options?.customMeasureFn, // Forward to next layer
+    options?.customWrapFn, // Forward to next layer
   );
-}
+};
 ```
 
 #### 3. Inject Functions from Application Layer
@@ -171,21 +176,25 @@ updateBoundElements(element, this.scene, this.getMathMeasurementOptions(element)
 ## Benefits of This Approach
 
 ### 1. **No Circular Dependencies**
+
 - Lower-level packages remain independent
 - Higher-level packages provide behavior via injection
 - Clean separation of concerns
 
 ### 2. **Backward Compatibility**
+
 - All parameters are optional
 - Existing code works without changes
 - Regular text continues to work normally
 
 ### 3. **Extensibility**
+
 - Easy to add more subtypes in the future
 - No changes needed to low-level packages
 - New subtypes just provide their own functions
 
 ### 4. **Testability**
+
 - Easy to test with mock functions
 - No need to set up entire subtype system for tests
 - Can test edge cases in isolation
@@ -193,37 +202,55 @@ updateBoundElements(element, this.scene, this.getMathMeasurementOptions(element)
 ## Alternative Approaches Considered
 
 ### ❌ Alternative 1: Import Directly
+
 ```typescript
 // In textElement.ts
 import { getSubtypeMethods } from "../../excalidraw/subtypes";
 ```
+
 **Problem:** Creates circular dependency, breaks package layering
 
 ### ❌ Alternative 2: Move Subtypes to Element Package
+
 ```typescript
 // Move packages/excalidraw/subtypes/ → packages/element/src/subtypes/
 ```
+
 **Problem:**
+
 - Element package becomes tightly coupled to specific implementations
 - Violates single responsibility principle
 - Makes element package harder to reuse
 
 ### ❌ Alternative 3: Event System
+
 ```typescript
 // Emit events and let higher layers handle them
-eventBus.emit('measureText', { element, text });
+eventBus.emit("measureText", { element, text });
 ```
+
 **Problem:**
+
 - Adds complexity with async event handling
 - Makes control flow harder to follow
 - Overkill for this use case
 
 ### ✅ Alternative 4: Dependency Injection (Chosen)
+
 ```typescript
 // Pass functions as parameters
-handleBindTextResize(element, scene, false, false, customMeasureFn, customWrapFn);
+handleBindTextResize(
+  element,
+  scene,
+  false,
+  false,
+  customMeasureFn,
+  customWrapFn,
+);
 ```
+
 **Benefits:**
+
 - Simple and explicit
 - No architectural violations
 - Easy to understand and maintain
@@ -235,11 +262,13 @@ This is a classic example of the **Dependency Inversion Principle**:
 > High-level modules should not depend on low-level modules. Both should depend on abstractions.
 
 In our case:
+
 - **Low-level:** `textElement.ts` defines an **abstraction** (function signature for measurement)
 - **High-level:** `App.tsx` provides a **concrete implementation** (math measurement functions)
 - **No dependency** from low to high, only high-level knows about low-level
 
 This pattern is common in:
+
 - Plugin architectures
 - Callback-based APIs
 - Strategy pattern implementations

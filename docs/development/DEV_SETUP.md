@@ -9,6 +9,7 @@
 ```
 
 This script will:
+
 - Check and install dependencies if needed
 - Start the Vite development server on http://127.0.0.1:3001
 
@@ -85,6 +86,7 @@ To override these locally, create a `.env.development.local` file (gitignored).
 If port 3001 is already in use, you can:
 
 1. Kill the process using the port:
+
    ```bash
    lsof -ti:3001 | xargs kill -9
    ```

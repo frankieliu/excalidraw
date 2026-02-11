@@ -15,6 +15,7 @@ npm link svg-to-excalidraw
 ```
 
 **Alternative: Direct file reference in package.json**
+
 ```json
 {
   "dependencies": {
@@ -102,7 +103,7 @@ export const actionImportSVG = register({
                 acc[el.id] = true;
                 return acc;
               },
-              {}
+              {},
             ),
           },
           commitToHistory: true,
@@ -193,7 +194,7 @@ const handleDrop = async (event: DragEvent) => {
 
   // Check for SVG files
   const svgFiles = Array.from(event.dataTransfer?.files || []).filter(
-    file => file.type === "image/svg+xml" || file.name.endsWith(".svg")
+    (file) => file.type === "image/svg+xml" || file.name.endsWith(".svg"),
   );
 
   if (svgFiles.length > 0) {
@@ -210,7 +211,7 @@ const handleDrop = async (event: DragEvent) => {
         // Position at drop location
         const dropPoint = viewportCoordsToSceneCoords(
           { clientX: event.clientX, clientY: event.clientY },
-          appState
+          appState,
         );
 
         // ... add elements with positioning
@@ -271,6 +272,7 @@ Create `test.svg`:
 ## Implementation Checklist
 
 ### Core Functionality
+
 - [ ] Link local svg-to-excalidraw package
 - [ ] Create actionImportSVG.ts
 - [ ] Register action in index
@@ -279,6 +281,7 @@ Create `test.svg`:
 - [ ] Test with simple SVG
 
 ### Enhanced Features
+
 - [ ] Add drag & drop support
 - [ ] Add paste from clipboard support
 - [ ] Add import options dialog (scale, position, grouping)
@@ -286,6 +289,7 @@ Create `test.svg`:
 - [ ] Add error handling and user feedback
 
 ### Polish
+
 - [ ] Add import preview
 - [ ] Add batch import support
 - [ ] Handle multiple SVGs at once
@@ -293,6 +297,7 @@ Create `test.svg`:
 - [ ] Add keyboard shortcut (Ctrl/Cmd+Shift+I)
 
 ### Testing
+
 - [ ] Test with simple shapes
 - [ ] Test with complex paths
 - [ ] Test with text elements
@@ -321,6 +326,7 @@ excalidraw/
 ## Expected Bundle Size Impact
 
 Adding svg-to-excalidraw will add:
+
 - Core library: ~50KB gzipped
 - Dependencies (if not already present):
   - chroma-js: ~13KB
