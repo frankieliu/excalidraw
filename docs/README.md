@@ -50,6 +50,7 @@ User interface and file handling improvements.
 
 **Feature Documentation:**
 - [FILE_HANDLING_IMPROVEMENTS.md](./ui-improvements/FILE_HANDLING_IMPROVEMENTS.md) - File handle preservation and tab title updates
+- [FILE_HANDLE_PERSISTENCE.md](./ui-improvements/FILE_HANDLE_PERSISTENCE.md) - 📋 Proposal: Persist file handles across page reloads
 - [REFRESH_TEXT_BOUNDS.md](./ui-improvements/REFRESH_TEXT_BOUNDS.md) - Manual text bounding box refresh tool
 
 ---
@@ -99,10 +100,10 @@ Feature analysis and research documentation.
 
 ## 📊 Documentation Statistics
 
-- **Total Documents**: 28 files
+- **Total Documents**: 29 files
 - **MathJax Documentation**: 13 files
 - **SVG Import Documentation**: 4 files
-- **UI Improvements Documentation**: 2 files
+- **UI Improvements Documentation**: 3 files
 - **Development Guides**: 5 files
 - **Analysis Documents**: 2 files
 
@@ -127,4 +128,4 @@ git log --oneline -- docs/
 
 ---
 
-**Last Updated**: 2026-02-09
+**Last Updated**: 2026-02-10
