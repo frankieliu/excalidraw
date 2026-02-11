@@ -122,6 +122,7 @@ import {
 
 import { loadFilesFromFirebase } from "./data/firebase";
 import {
+  FileHandleStorage,
   LibraryIndexedDBAdapter,
   LibraryLocalStorageMigrationAdapter,
   LocalData,
@@ -243,6 +244,37 @@ const initializeScene = async (opts: {
     }),
     appState: restoreAppState(localDataState?.appState, null),
   };
+
+  // Attempt to restore file handle from IndexedDB if not in an external scene
+  // This allows users to reload the page without losing their file association
+  const isExternalSceneCheck = !!(
+    id ||
+    jsonBackendMatch ||
+    getCollaborationLinkData(window.location.href)
+  );
+  if (!isExternalSceneCheck && scene.appState) {
+    try {
+      const { handle, granted, needsCleanup } =
+        await FileHandleStorage.restoreHandle();
+
+      if (granted && handle) {
+        // Permission granted - restore the file handle
+        scene.appState = {
+          ...scene.appState,
+          fileHandle: handle as any, // Type cast needed due to FileSystemFileHandle/FileSystemHandle mismatch
+        };
+        console.info("File handle restored from IndexedDB");
+      } else if (needsCleanup) {
+        // Permission denied or file no longer exists - handle was cleared
+        console.info(
+          "Stored file handle was invalid and has been removed from storage",
+        );
+      }
+    } catch (error) {
+      console.warn("Failed to restore file handle on page load:", error);
+      // Non-critical error - continue without file handle
+    }
+  }
 
   let roomLinkData = getCollaborationLinkData(window.location.href);
   const isExternalScene = !!(id || jsonBackendMatch || roomLinkData);
@@ -391,6 +423,7 @@ const ExcalidrawWrapper = () => {
   }
 
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
+  const previousFileHandleRef = useRef<FileSystemFileHandle | null>(null);
 
   useEffect(() => {
     trackEvent("load", "frame", getFrame());
@@ -688,8 +721,28 @@ const ExcalidrawWrapper = () => {
     appState: AppState,
     files: BinaryFiles,
   ) => {
-    // Update document title when appState changes
+    // Save/clear file handle to IndexedDB when it changes
     const fileHandle = appState.fileHandle;
+    if (fileHandle !== previousFileHandleRef.current) {
+      if (fileHandle) {
+        // File handle was set or changed - save it
+        // Cast to FileSystemFileHandle since appState.fileHandle is typed as FileSystemHandle
+        FileHandleStorage.saveHandle(
+          fileHandle as unknown as FileSystemFileHandle,
+        ).catch((error) => {
+          console.error("Failed to persist file handle:", error);
+        });
+      } else if (previousFileHandleRef.current) {
+        // File handle was cleared - remove from storage
+        FileHandleStorage.clearHandle().catch((error) => {
+          console.error("Failed to clear persisted file handle:", error);
+        });
+      }
+      previousFileHandleRef.current =
+        (fileHandle as unknown as FileSystemFileHandle) || null;
+    }
+
+    // Update document title when appState changes
     if (fileHandle && fileHandle.name) {
       const filename = fileHandle.name.replace(/\.excalidraw$/, "");
       document.title = `Excalidraw: ${filename}`;

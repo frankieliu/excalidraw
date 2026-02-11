@@ -46,6 +46,10 @@ import { Locker } from "./Locker";
 import { updateBrowserStateVersion } from "./tabSync";
 
 const filesStore = createStore("files-db", "files-store");
+const fileHandleStore = createStore(
+  "excalidraw-filehandles-db",
+  "handles-store",
+);
 
 export const localStorageQuotaExceededAtom = atom(false);
 
@@ -271,5 +275,143 @@ export class LibraryLocalStorageMigrationAdapter {
   }
   static clear() {
     localStorage.removeItem(STORAGE_KEYS.__LEGACY_LOCAL_STORAGE_LIBRARY);
+  }
+}
+
+/**
+ * File Handle Storage for persisting file handles across page reloads.
+ * Uses IndexedDB because FileSystemFileHandle objects cannot be serialized to JSON.
+ */
+export class FileHandleStorage {
+  /** IndexedDB store key for current file handle */
+  private static readonly CURRENT_FILE_KEY = "current-file";
+
+  /**
+   * Save a file handle to IndexedDB
+   * @param handle - The FileSystemFileHandle to persist
+   * @returns Promise that resolves when saved
+   */
+  static async saveHandle(
+    handle: FileSystemFileHandle,
+  ): Promise<{ success: boolean; error?: Error }> {
+    try {
+      await set(FileHandleStorage.CURRENT_FILE_KEY, handle, fileHandleStore);
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to save file handle:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+    }
+  }
+
+  /**
+   * Retrieve the saved file handle from IndexedDB
+   * @returns Promise that resolves to the FileSystemFileHandle or null
+   */
+  static async getHandle(): Promise<FileSystemFileHandle | null> {
+    try {
+      const handle = await get<FileSystemFileHandle>(
+        FileHandleStorage.CURRENT_FILE_KEY,
+        fileHandleStore,
+      );
+      return handle || null;
+    } catch (error) {
+      console.warn("Failed to retrieve file handle:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Clear the saved file handle from IndexedDB
+   * @returns Promise that resolves when cleared
+   */
+  static async clearHandle(): Promise<void> {
+    try {
+      await del(FileHandleStorage.CURRENT_FILE_KEY, fileHandleStore);
+    } catch (error) {
+      console.warn("Failed to clear file handle:", error);
+    }
+  }
+
+  /**
+   * Verify if the stored file handle is still valid and request permissions if needed
+   * @param handle - The FileSystemFileHandle to verify
+   * @returns Promise that resolves to the permission status
+   */
+  static async verifyHandlePermission(handle: FileSystemFileHandle): Promise<{
+    granted: boolean;
+    permission: PermissionState;
+    error?: Error;
+  }> {
+    try {
+      // Type assertion needed because permission methods aren't in standard TS lib yet
+      // These methods are part of the File System Access API specification
+      const handleWithPermissions = handle as FileSystemFileHandle & {
+        queryPermission(descriptor?: {
+          mode?: "read" | "readwrite";
+        }): Promise<PermissionState>;
+        requestPermission(descriptor?: {
+          mode?: "read" | "readwrite";
+        }): Promise<PermissionState>;
+      };
+
+      // Check current permission status
+      const permission = await handleWithPermissions.queryPermission({
+        mode: "readwrite",
+      });
+
+      if (permission === "granted") {
+        return { granted: true, permission };
+      }
+
+      if (permission === "prompt") {
+        // Request permission from user
+        const newPermission = await handleWithPermissions.requestPermission({
+          mode: "readwrite",
+        });
+        return {
+          granted: newPermission === "granted",
+          permission: newPermission,
+        };
+      }
+
+      // Permission denied
+      return { granted: false, permission };
+    } catch (error) {
+      console.error("Failed to verify file handle permission:", error);
+      return {
+        granted: false,
+        permission: "denied",
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+    }
+  }
+
+  /**
+   * Restore file handle from storage and verify permissions
+   * @returns Promise that resolves to verified handle or null
+   */
+  static async restoreHandle(): Promise<{
+    handle: FileSystemFileHandle | null;
+    granted: boolean;
+    needsCleanup: boolean;
+  }> {
+    const handle = await FileHandleStorage.getHandle();
+
+    if (!handle) {
+      return { handle: null, granted: false, needsCleanup: false };
+    }
+
+    const verification = await FileHandleStorage.verifyHandlePermission(handle);
+
+    if (!verification.granted) {
+      // Permission denied or error - clear the stale handle
+      await FileHandleStorage.clearHandle();
+      return { handle: null, granted: false, needsCleanup: true };
+    }
+
+    return { handle, granted: true, needsCleanup: false };
   }
 }
