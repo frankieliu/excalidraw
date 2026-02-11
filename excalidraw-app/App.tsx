@@ -245,8 +245,8 @@ const initializeScene = async (opts: {
     appState: restoreAppState(localDataState?.appState, null),
   };
 
-  // Attempt to restore file handle from IndexedDB if not in an external scene
-  // This allows users to reload the page without losing their file association
+  // Attempt to restore file handle and filename from IndexedDB
+  // This allows users to see the filename after reload, even if permissions expired
   const isExternalSceneCheck = !!(
     id ||
     jsonBackendMatch ||
@@ -254,38 +254,22 @@ const initializeScene = async (opts: {
   );
   if (!isExternalSceneCheck && scene.appState) {
     try {
-      const { handle, granted, fileName, needsPermission } =
-        await FileHandleStorage.restoreHandle();
+      const { handle, fileName } = await FileHandleStorage.restoreHandle();
 
-      if (granted && handle) {
-        // Permission granted - restore the file handle
+      if (handle && fileName) {
+        // Restore both the handle and filename
+        // Permission will be requested when user tries to save
         scene.appState = {
           ...scene.appState,
-          fileHandle: handle as any, // Type cast needed due to FileSystemFileHandle/FileSystemHandle mismatch
+          fileHandle: handle as any,
+          name: fileName.replace(/\.excalidraw$/, ""), // Remove extension for display
         };
-        console.info(`File handle restored: ${fileName}`);
-      } else if (needsPermission && handle && fileName) {
-        // Permission needed - try to restore it (will prompt user)
         console.info(
-          `Requesting permission to restore file: ${fileName}. Browser will show permission dialog.`,
+          `File info restored: ${fileName} (permission will be requested when saving)`,
         );
-        const { granted: permissionGranted } =
-          await FileHandleStorage.restoreHandleWithPermission(handle);
-
-        if (permissionGranted) {
-          scene.appState = {
-            ...scene.appState,
-            fileHandle: handle as any,
-          };
-          console.info(`File handle restored after permission grant: ${fileName}`);
-        } else {
-          console.warn(
-            `Permission denied for file: ${fileName}. User needs to reopen the file.`,
-          );
-        }
       }
     } catch (error) {
-      console.warn("Failed to restore file handle on page load:", error);
+      console.warn("Failed to restore file info on page load:", error);
       // Non-critical error - continue without file handle
     }
   }

@@ -422,76 +422,43 @@ export class FileHandleStorage {
   }
 
   /**
-   * Restore file handle from storage and verify permissions
-   * Only restores handles with "granted" permission on page load
-   * Keeps handle in storage if permission is "prompt" for later restoration
-   * @returns Promise that resolves to verified handle or null
+   * Restore file handle from storage - returns handle and metadata
+   * Does NOT verify permissions - that happens when actually saving
+   * @returns Promise with handle and metadata
    */
   static async restoreHandle(): Promise<{
     handle: FileSystemFileHandle | null;
-    granted: boolean;
     fileName?: string;
-    needsPermission: boolean;
+    savedAt?: number;
   }> {
-    const { handle, fileName } = await FileHandleStorage.getHandle();
-
-    if (!handle) {
-      return { handle: null, granted: false, needsPermission: false };
-    }
-
-    // Only query permission, don't request (page load = no user activation)
-    const verification =
-      await FileHandleStorage.verifyHandlePermission(handle, false);
-
-    if (verification.permission === "granted") {
-      // Permission already granted - can use the handle
-      return { handle, granted: true, fileName, needsPermission: false };
-    }
-
-    if (verification.permission === "denied") {
-      // Permission explicitly denied - clear stale handle
-      await FileHandleStorage.clearHandle();
-      return { handle: null, granted: false, needsPermission: false };
-    }
-
-    // Permission is "prompt" - keep handle for later restoration
-    // Return info so UI can show a restore button
-    console.info(
-      `File handle for "${fileName}" needs permission. User can restore with a click.`,
-    );
-    return { handle, granted: false, fileName, needsPermission: true };
+    const { handle, fileName, savedAt } = await FileHandleStorage.getHandle();
+    return { handle, fileName, savedAt };
   }
 
   /**
-   * Request permission and restore a file handle (requires user activation)
-   * Call this in response to a user click/interaction
-   * @param handle - The file handle to restore
-   * @returns Promise that resolves when permission is granted or denied
+   * Request permission for a file handle (call when saving)
+   * @param handle - The file handle to verify/request permission for
+   * @returns Promise that resolves to permission status
    */
-  static async restoreHandleWithPermission(
+  static async requestHandlePermission(
     handle: FileSystemFileHandle,
   ): Promise<{ granted: boolean; error?: Error }> {
-    // This will request permission (requires user activation)
+    // This will request permission if needed (requires user activation like clicking "Save")
     const verification =
       await FileHandleStorage.verifyHandlePermission(handle, true);
 
     if (verification.granted) {
-      console.info("File handle permission granted");
       return { granted: true };
     }
 
+    // Permission denied - clear the handle
     if (verification.permission === "denied") {
-      // User denied - clear the handle
       await FileHandleStorage.clearHandle();
-      return {
-        granted: false,
-        error: new Error("Permission denied by user"),
-      };
     }
 
     return {
       granted: false,
-      error: verification.error || new Error("Failed to get permission"),
+      error: verification.error || new Error("Permission not granted"),
     };
   }
 }
