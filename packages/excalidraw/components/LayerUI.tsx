@@ -20,7 +20,6 @@ import type { NonDeletedExcalidrawElement } from "@excalidraw/element/types";
 
 import { actionToggleStats } from "../actions";
 import { trackEvent } from "../analytics";
-import { isHandToolActive } from "../appState";
 import { TunnelsContext, useInitializeTunnels } from "../context/tunnels";
 import { UIAppStateContext } from "../context/ui-appState";
 import { useAtom, useAtomValue } from "../editor-jotai";
@@ -56,13 +55,13 @@ import ElementLinkDialog from "./ElementLinkDialog";
 import { ErrorDialog } from "./ErrorDialog";
 import { EyeDropper, activeEyeDropperAtom } from "./EyeDropper";
 import { FixedSideContainer } from "./FixedSideContainer";
-import { HandButton } from "./HandButton";
 import { HelpDialog } from "./HelpDialog";
 import { HintViewer } from "./HintViewer";
 import { ImageExportDialog } from "./ImageExportDialog";
 import { Island } from "./Island";
 import { JSONExportDialog } from "./JSONExportDialog";
 import { LaserPointerButton } from "./LaserPointerButton";
+import { Toast } from "./Toast";
 
 import "./LayerUI.scss";
 import "./Toolbar.scss";
@@ -360,13 +359,6 @@ const LayerUI = ({
 
                             <div className="App-toolbar__divider" />
 
-                            <HandButton
-                              checked={isHandToolActive(appState)}
-                              onChange={() => onHandToolToggle()}
-                              title={t("toolBar.hand")}
-                              isMobile
-                            />
-
                             <ShapesSwitcher
                               setAppState={setAppState}
                               activeTool={appState.activeTool}
@@ -567,13 +559,13 @@ const LayerUI = ({
       <tunnels.OverwriteConfirmDialogTunnel.Out />
       {renderImageExportDialog()}
       {renderJSONExportDialog()}
-      {appState.pasteDialog.shown && (
+      {appState.openDialog?.name === "charts" && (
         <PasteChartDialog
-          setAppState={setAppState}
-          appState={appState}
+          data={appState.openDialog.data}
+          rawText={appState.openDialog.rawText}
           onClose={() =>
             setAppState({
-              pasteDialog: { shown: false, data: null },
+              openDialog: null,
             })
           }
         />
@@ -616,18 +608,30 @@ const LayerUI = ({
               showExitZenModeBtn={showExitZenModeBtn}
               renderWelcomeScreen={renderWelcomeScreen}
             />
-            {appState.scrolledOutside && (
-              <button
-                type="button"
-                className="scroll-back-to-content"
-                onClick={() => {
-                  setAppState((appState) => ({
-                    ...calculateScrollCenter(elements, appState),
-                  }));
-                }}
-              >
-                {t("buttons.scrollBackToContent")}
-              </button>
+            {(appState.toast || appState.scrolledOutside) && (
+              <div className="floating-status-stack">
+                {appState.toast && (
+                  <Toast
+                    message={appState.toast.message}
+                    onClose={() => setAppState({ toast: null })}
+                    duration={appState.toast.duration}
+                    closable={appState.toast.closable}
+                  />
+                )}
+                {!appState.toast && appState.scrolledOutside && (
+                  <button
+                    type="button"
+                    className="scroll-back-to-content"
+                    onClick={() => {
+                      setAppState((appState) => ({
+                        ...calculateScrollCenter(elements, appState),
+                      }));
+                    }}
+                  >
+                    {t("buttons.scrollBackToContent")}
+                  </button>
+                )}
+              </div>
             )}
           </div>
           {renderSidebars()}
