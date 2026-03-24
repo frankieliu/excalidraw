@@ -439,7 +439,6 @@ const ExcalidrawWrapper = () => {
   // Initialize Math subtype
   useMathSubtype(excalidrawAPI);
 
-
   const [, setShareDialogState] = useAtom(shareDialogStateAtom);
   const [collabAPI] = useAtom(collabAPIAtom);
   const [isCollaborating] = useAtomWithInitialValue(isCollaboratingAtom, () => {
