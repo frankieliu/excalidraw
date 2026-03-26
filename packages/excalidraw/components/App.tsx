@@ -12572,6 +12572,11 @@ class App extends React.Component<AppProps, AppState> {
       });
     }
 
+    const mathMeasurementOptions =
+      selectedElements.length === 1
+        ? this.getMathMeasurementOptions(selectedElements[0])
+        : undefined;
+
     if (
       transformElements(
         pointerDownState.originalElements,
@@ -12587,6 +12592,8 @@ class App extends React.Component<AppProps, AppState> {
         resizeY,
         pointerDownState.resize.center.x,
         pointerDownState.resize.center.y,
+        mathMeasurementOptions?.customMeasureFn,
+        mathMeasurementOptions?.customWrapFn,
       )
     ) {
       const elementsToHighlight = new Set<ExcalidrawElement>();

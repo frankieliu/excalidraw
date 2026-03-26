@@ -96,6 +96,12 @@ export const transformElements = (
   pointerY: number,
   centerX: number,
   centerY: number,
+  customMeasureFn?: (
+    text: string,
+    font: string,
+    lineHeight: number,
+  ) => { width: number; height: number },
+  customWrapFn?: (text: string, font: string, maxWidth: number) => string,
 ): boolean => {
   const elementsMap = scene.getNonDeletedElementsMap();
   if (selectedElements.length === 1) {
@@ -142,6 +148,8 @@ export const transformElements = (
             shouldMaintainAspectRatio,
             shouldResizeFromCenter,
           },
+          customMeasureFn,
+          customWrapFn,
         );
       }
     }
@@ -736,6 +744,12 @@ export const resizeSingleElement = (
     shouldResizeFromCenter?: boolean;
     shouldInformMutation?: boolean;
   } = {},
+  customMeasureFn?: (
+    text: string,
+    font: string,
+    lineHeight: number,
+  ) => { width: number; height: number },
+  customWrapFn?: (text: string, font: string, maxWidth: number) => string,
 ) => {
   if (isTextElement(latestElement) && isTextElement(origElement)) {
     return resizeSingleTextElement(
@@ -919,6 +933,8 @@ export const resizeSingleElement = (
       scene,
       handleDirection,
       shouldMaintainAspectRatio,
+      customMeasureFn,
+      customWrapFn,
     );
 
     updateBoundElements(latestElement, scene);
