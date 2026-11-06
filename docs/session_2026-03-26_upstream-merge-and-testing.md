@@ -72,7 +72,7 @@ Extra blank line at `excalidraw-app/App.tsx:442` caught by ESLint/prettier. Remo
 Started dev server in tmux session `excalidraw-merge` on port 3002:
 
 ```
-~/Projects/tmux-helper/tmux-send.sh excalidraw-merge "cd ~/Projects/diagrams/excalidraw-merge && PORT=3001 yarn start"
+~/Projects/mac/tmux-helper/tmux-send.sh excalidraw-merge "cd ~/Projects/diagrams/excalidraw-merge && PORT=3001 yarn start"
 ```
 
 Server ended up on port 3002 (3001 was occupied).
