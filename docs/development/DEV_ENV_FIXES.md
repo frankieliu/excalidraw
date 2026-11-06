@@ -16,7 +16,7 @@ This document describes the fixes applied to resolve development server issues a
 When you see module import errors or stale builds:
 
 ```bash
-cd /Users/frankliu/Projects/excalidraw
+cd /Users/frankliu/Projects/diagrams/excalidraw
 rm -rf excalidraw-app/node_modules/.vite
 rm -rf node_modules/.vite
 ```
@@ -59,7 +59,7 @@ VITE_APP_PORT=3000
 If you encounter persistent dependency or build issues:
 
 ```bash
-cd /Users/frankliu/Projects/excalidraw
+cd /Users/frankliu/Projects/diagrams/excalidraw
 
 # Full clean reinstall
 rm -rf node_modules
@@ -83,7 +83,7 @@ yarn build:excalidraw
 ### Starting the Development Server
 
 ```bash
-cd /Users/frankliu/Projects/excalidraw
+cd /Users/frankliu/Projects/diagrams/excalidraw
 yarn start
 ```
 

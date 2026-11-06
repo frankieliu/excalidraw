@@ -35,11 +35,11 @@ The most complex conflicts were in `App.tsx` where upstream refactored the API i
 
 ## 2. Created isolated merge directory
 
-Cloned the local repo to `~/Projects/excalidraw-merge` to keep the working directory unaffected:
+Cloned the local repo to `~/Projects/diagrams/excalidraw-merge` to keep the working directory unaffected:
 
 ```
-git clone /Users/frankliu/Projects/excalidraw ~/Projects/excalidraw-merge
-cd ~/Projects/excalidraw-merge
+git clone /Users/frankliu/Projects/diagrams/excalidraw ~/Projects/diagrams/excalidraw-merge
+cd ~/Projects/diagrams/excalidraw-merge
 git remote add upstream git@github.com:excalidraw/excalidraw.git
 git fetch upstream master
 ```
@@ -72,7 +72,7 @@ Extra blank line at `excalidraw-app/App.tsx:442` caught by ESLint/prettier. Remo
 Started dev server in tmux session `excalidraw-merge` on port 3002:
 
 ```
-~/Projects/tmux-helper/tmux-send.sh excalidraw-merge "cd ~/Projects/excalidraw-merge && PORT=3001 yarn start"
+~/Projects/tmux-helper/tmux-send.sh excalidraw-merge "cd ~/Projects/diagrams/excalidraw-merge && PORT=3001 yarn start"
 ```
 
 Server ended up on port 3002 (3001 was occupied).
@@ -140,7 +140,7 @@ Debug logs were removed after investigation.
 
 ## 11. Committed and pushed
 
-All changes committed to `mathjax-svg-import-rebased` in `~/Projects/excalidraw-merge` and pushed to `github.com:frankieliu/excalidraw`:
+All changes committed to `mathjax-svg-import-rebased` in `~/Projects/diagrams/excalidraw-merge` and pushed to `github.com:frankieliu/excalidraw`:
 
 - `fix: remove stale charts.ts superseded by charts/ directory from upstream`
 - `fix: remove extra blank line (prettier)`

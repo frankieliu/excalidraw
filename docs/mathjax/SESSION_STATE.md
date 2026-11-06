@@ -190,7 +190,7 @@ The codebase has pre-existing TypeScript type errors in test files:
 ### 1. Start Development Server
 
 ```bash
-cd /Users/frankliu/Projects/excalidraw
+cd /Users/frankliu/Projects/diagrams/excalidraw
 yarn start
 # Opens at http://127.0.0.1:3001/
 ```

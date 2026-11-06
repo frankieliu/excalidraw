@@ -4,11 +4,11 @@ How the merge of `upstream/master` into `mathjax-svg-import-rebased` was resolve
 
 ## Merge Setup
 
-The merge was performed in an isolated clone at `~/Projects/excalidraw-merge` to avoid disrupting the main working directory:
+The merge was performed in an isolated clone at `~/Projects/diagrams/excalidraw-merge` to avoid disrupting the main working directory:
 
 ```bash
-git clone /Users/frankliu/Projects/excalidraw ~/Projects/excalidraw-merge
-cd ~/Projects/excalidraw-merge
+git clone /Users/frankliu/Projects/diagrams/excalidraw ~/Projects/diagrams/excalidraw-merge
+cd ~/Projects/diagrams/excalidraw-merge
 git remote add upstream git@github.com:excalidraw/excalidraw.git
 git fetch upstream master
 git merge upstream/master

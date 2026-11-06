@@ -55,7 +55,7 @@ Remote: git@github.com:frankieliu/excalidraw.git
 ## How to Restart the Server
 
 ```bash
-cd /Users/frankliu/Projects/excalidraw
+cd /Users/frankliu/Projects/diagrams/excalidraw
 
 # Option 1: Use the script
 bash start.sh
@@ -108,7 +108,7 @@ yarn test:typecheck
 curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/
 
 # View server output (if running in background)
-tail -f /tmp/claude/-Users-frankliu-Projects-excalidraw/tasks/b036031.output
+tail -f /tmp/claude/-Users-frankliu-Projects-diagrams-excalidraw/tasks/b036031.output
 ```
 
 ## Key API Changes We Fixed
